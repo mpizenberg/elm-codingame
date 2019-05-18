@@ -8,13 +8,13 @@ main =
     Platform.worker
         { init = init
         , update = update
-        , subscriptions = \_ -> incomming identity
+        , subscriptions = \_ -> incoming identity
         }
 
 
 {-| Port bringing the updated game data every turn.
 -}
-port incomming : (Value -> msg) -> Sub msg
+port incoming : (Value -> msg) -> Sub msg
 
 
 {-| Port to give the new orders for this turn.

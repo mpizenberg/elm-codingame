@@ -52,7 +52,7 @@ gameData = {};
   readLinesIntoGameData();
 
   // Send game turn data to elm for processing.
-  app.ports.incomming.send(gameData);
+  app.ports.incoming.send(gameData);
 
   // Give up priority on the event loop to enable
   // subscription to elm outgoing port to trigger.
@@ -74,7 +74,7 @@ with 3 ports set up:
 ```elm
 -- Port bringing the updated game data every turn.
 -- This triggers the update function.
-port incomming : (Value -> msg) -> Sub msg
+port incoming : (Value -> msg) -> Sub msg
 
 -- Port to give the new orders for this turn.
 port order : String -> Cmd msg

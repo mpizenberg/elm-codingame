@@ -29,7 +29,7 @@ gameData = {};
   readLinesIntoGameData();
 
   // Send game turn data to elm for processing.
-  app.ports.incomming.send(gameData);
+  app.ports.incoming.send(gameData);
 
   // Give up priority on the event loop to enable
   // subscription to elm outgoing port to trigger.
