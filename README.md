@@ -1,4 +1,4 @@
-# CodingGame Elm Template
+# CodinGame Elm Template
 
 This template is designed for the contest ["A Code of Ice and Fire"][contest]
 but can easily be adapted to other CodinGame puzzles and contests.
@@ -7,13 +7,13 @@ but can easily be adapted to other CodinGame puzzles and contests.
 # Compile Elm code into Main.js
 elm make src/Main.elm --output Main.js --optimize
 
-# Concatenate Main.js and CodingGame.js
-cat CodingGame.js >> Main.js
+# Concatenate Main.js and CodinGame.js
+cat CodinGame.js >> Main.js
 
 # Copy to clipboard
 xclip -selection clipboard Main.js
 
-# Paste into your CodingGame web editor and hit Play! ;)
+# Paste into your CodinGame web editor and hit Play! ;)
 ```
 
 Put all this into a makefile to _make_ your life easier.
@@ -26,7 +26,7 @@ It's quite easy actually.
 The trick is simply to give up the priority on the event loop
 once per game loop iteration with `setTimeout()`.
 
-Here is the skeleton of `CodingGame.js`:
+Here is the skeleton of `CodinGame.js`:
 
 ```js
 // Retrieve initial data from input.
@@ -85,6 +85,6 @@ port debug : String -> Cmd msg
 
 In the update function, after computing our strategy,
 we generate a string and send it to the `order` port
-so that CodingGame executes our command.
+so that CodinGame executes our command.
 
 [worker]: https://package.elm-lang.org/packages/elm/core/latest/Platform#worker
