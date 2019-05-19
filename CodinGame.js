@@ -24,21 +24,24 @@ app.ports.debug.subscribe(msg => console.error(msg));
 gameData = {};
 
 // Game loop.
-(function gameLoop() {
+(function gameLoop(turn) {
   // Read this turn game data.
-  readLinesIntoGameData();
+  readLinesIntoGameData(turn);
 
   // Send game turn data to elm for processing.
   app.ports.incoming.send(gameData);
 
   // Give up priority on the event loop to enable
   // subscription to elm outgoing port to trigger.
-  setTimeout(gameLoop);
-})();
+  setTimeout(gameLoop, 0, turn + 1);
+})(0);
 
 // Update gameData with the new turn data.
 // Performs side effects (readline)
-function readLinesIntoGameData() {
+function readLinesIntoGameData(turn) {
+  // Turn
+  gameData.turn = turn;
+
   // Money.
   gameData.gold = parseInt(readline());
   gameData.income = parseInt(readline());
