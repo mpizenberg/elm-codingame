@@ -66,6 +66,9 @@ or if we need to defend our HQ from the opponent doing the same.
 We could even set traps if the opponent tries to reach for our HQ
 in a risky way if it thinks it could almost do it.
 
+Beware that there are things on the map that alter the "distance" to HQ.
+Buildings like towers for example prevent units of level 1 and 2 to move.
+
 # Path length from one HQ to the other
 
 The path of shortest distance from our HQ to the opponent HQ.
