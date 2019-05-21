@@ -1,7 +1,9 @@
 port module Main exposing (main)
 
 import Array exposing (Array)
+import Decode
 import Json.Decode as Decode exposing (Decoder, Value)
+import Types exposing (..)
 
 
 main : Program Value Model Value
@@ -34,7 +36,7 @@ Extract with a Json decoder.
 -}
 init : Value -> ( Model, Cmd msg )
 init data =
-    case Decode.decodeValue initDataDecoder data of
+    case Decode.decodeValue Decode.initData data of
         Ok minesSpots ->
             ( Model minesSpots, debug "Init Done!" )
 
@@ -47,9 +49,17 @@ Extract the data with a Json decoder.
 -}
 update : Value -> Model -> ( Model, Cmd msg )
 update data model =
-    case Decode.decodeValue gameDataDecoder data of
+    case Decode.decodeValue Decode.gameData data of
         Ok gameData ->
-            ( model, Cmd.batch [ debug (String.fromInt gameData.turn), order "WAIT" ] )
+            let
+                log =
+                    String.join "\n\n" <|
+                        [ "Turn: " ++ String.fromInt gameData.turn
+
+                        -- , "Terrain:\n" ++ terrainToString gameData.terrain
+                        ]
+            in
+            ( model, Cmd.batch [ debug log, order "WAIT" ] )
 
         Err error ->
             ( model, debug (Decode.errorToString error) )
@@ -62,52 +72,3 @@ update data model =
 type alias Model =
     { minesSpots : Array Position
     }
-
-
-type alias Position =
-    { x : Int
-    , y : Int
-    }
-
-
-type alias GameData =
-    { turn : Int
-    , gold : Int
-    , income : Int
-    , opponentGold : Int
-    , opponentIncome : Int
-    , terrain : ()
-    , buildings : ()
-    , units : ()
-    }
-
-
-
--- Decoders
-
-
-initDataDecoder : Decoder (Array Position)
-initDataDecoder =
-    Decode.field "mines" <|
-        Decode.map Array.fromList <|
-            Decode.list positionDecoder
-
-
-positionDecoder : Decoder Position
-positionDecoder =
-    Decode.map2 Position
-        (Decode.field "x" Decode.int)
-        (Decode.field "y" Decode.int)
-
-
-gameDataDecoder : Decoder GameData
-gameDataDecoder =
-    Decode.map8 GameData
-        (Decode.field "turn" Decode.int)
-        (Decode.field "gold" Decode.int)
-        (Decode.field "income" Decode.int)
-        (Decode.field "opponentGold" Decode.int)
-        (Decode.field "opponentIncome" Decode.int)
-        (Decode.field "terrain" (Decode.succeed ()))
-        (Decode.field "buildings" (Decode.succeed ()))
-        (Decode.field "units" (Decode.succeed ()))

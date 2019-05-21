@@ -1,3 +1,6 @@
+// Get time
+time = new Date().getTime();
+
 // Retrieve initial data from input.
 initData = {};
 initData.numberMineSpots = parseInt(readline());
@@ -15,7 +18,11 @@ const app = this.Elm.Main.init({ flags: initData });
 
 // Setup subscription to elm outgoing port
 // used to transfer the string to print.
-app.ports.order.subscribe(answer => console.log(answer));
+app.ports.order.subscribe(answer => {
+  console.log(answer);
+  const newTime = new Date().getTime();
+  console.error("Time taken: " + (newTime - time));
+});
 
 // We can also setup an error port for debug.
 app.ports.debug.subscribe(msg => console.error(msg));
@@ -25,6 +32,9 @@ gameData = {};
 
 // Game loop.
 (function gameLoop(turn) {
+  // Monitor time
+  time = new Date().getTime();
+
   // Read this turn game data.
   readLinesIntoGameData(turn);
 

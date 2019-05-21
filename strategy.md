@@ -1,3 +1,5 @@
+% Initial thoughts #############################################################
+
 # Important rules:
 
 - Territory must be connexe. Cut branches are deactivated and units are killed
@@ -53,6 +55,16 @@ Similar to cutting territory but this time we go straight for the opponent HQ.
 The deal is quite simple, if we have enough money for a straight line
 of training units to reach the opponent HQ, it is victory!
 
+% Economy ######################################################################
+
+One tower is always worth it since it costs a level 3 units to destroy.
+
+- tower: 15 gold
+- level3: 30 gold + 20 / turn
+
+Can be strategic to force opponent to build a level 3 unit,
+and then build up an economic advantage.
+
 % Preparation ##################################################################
 
 At the first turn, we have more time to precompute a few things.
@@ -77,6 +89,8 @@ the distance from optimal path.
 
 Or just the length of the shortest path between to HQs passing by this cell.
 This could enable detection of dead-ends.
+Actually yeah this does not bring much info with 4-connectivity cells.
+99% of the time, distance is just |x1-x2| + |y1-y2|.
 
 # The "width" of each cell
 
