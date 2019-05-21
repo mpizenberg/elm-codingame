@@ -1,14 +1,18 @@
 module Types exposing
-    ( Building
+    ( ActiveCell(..)
+    , Building
     , BuildingType(..)
     , Cell(..)
     , GameData
+    , InactiveCell(..)
     , Owner(..)
     , Position
     , Terrain
     , Unit
     , cellFromChar
     , cellsLineString
+    , getCell
+    , isActiveMe
     , terrainToString
     )
 
@@ -35,6 +39,22 @@ type alias Terrain =
     Array (Array Cell)
 
 
+isActiveMe : Int -> Int -> Terrain -> Bool
+isActiveMe x y terrain =
+    case getCell x y terrain of
+        Just (Active Me _) ->
+            True
+
+        _ ->
+            False
+
+
+getCell : Int -> Int -> Terrain -> Maybe Cell
+getCell x y terrain =
+    Array.get y terrain
+        |> Maybe.andThen (Array.get x)
+
+
 terrainToString : Terrain -> String
 terrainToString terrain =
     Array.toList terrain
@@ -56,8 +76,19 @@ cellsLineString cells =
 type Cell
     = Void
     | Neutral
-    | Active Owner
-    | Inactive Owner
+    | Active Owner ActiveCell
+    | Inactive Owner InactiveCell
+
+
+type ActiveCell
+    = ActiveUnknown
+    | ActiveBuilding Building
+    | ActiveUnit Unit
+
+
+type InactiveCell
+    = InactiveUnknown
+    | InactiveBuilding Building
 
 
 cellToChar : Cell -> Char
@@ -69,16 +100,16 @@ cellToChar cell =
         Neutral ->
             '.'
 
-        Active Me ->
+        Active Me _ ->
             'O'
 
-        Active Enemy ->
+        Active Enemy _ ->
             'X'
 
-        Inactive Me ->
+        Inactive Me _ ->
             'o'
 
-        Inactive Enemy ->
+        Inactive Enemy _ ->
             'x'
 
 
@@ -92,16 +123,16 @@ cellFromChar char =
             Ok Neutral
 
         'O' ->
-            Ok (Active Me)
+            Ok (Active Me ActiveUnknown)
 
         'X' ->
-            Ok (Active Enemy)
+            Ok (Active Enemy ActiveUnknown)
 
         'o' ->
-            Ok (Inactive Me)
+            Ok (Inactive Me InactiveUnknown)
 
         'x' ->
-            Ok (Inactive Enemy)
+            Ok (Inactive Enemy InactiveUnknown)
 
         _ ->
             Err "Incorrect char"

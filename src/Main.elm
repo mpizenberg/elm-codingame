@@ -1,7 +1,9 @@
 port module Main exposing (main)
 
 import Array exposing (Array)
+import Compute
 import Decode
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Types exposing (..)
 
@@ -52,10 +54,18 @@ update data model =
     case Decode.decodeValue Decode.gameData data of
         Ok gameData ->
             let
+                frontier =
+                    Compute.myFrontierCells gameData.terrain
+
+                -- frontierPosString =
+                --     Dict.keys frontier
+                --         |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
+                --         |> String.join "\n"
                 log =
                     String.join "\n\n" <|
                         [ "Turn: " ++ String.fromInt gameData.turn
 
+                        -- , "Frontier:\n" ++ frontierPosString
                         -- , "Terrain:\n" ++ terrainToString gameData.terrain
                         ]
             in
