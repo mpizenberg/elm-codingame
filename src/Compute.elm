@@ -1,8 +1,55 @@
-module Compute exposing (myFrontierCells)
+module Compute exposing (myFrontierCells, training)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Types exposing (..)
+
+
+
+-- Training
+
+
+training : Terrain -> Dict ( Int, Int ) Cell -> List Training
+training terrain frontier =
+    Dict.foldl (trainingHelper terrain) [] frontier
+
+
+trainingHelper : Terrain -> ( Int, Int ) -> Cell -> List Training -> List Training
+trainingHelper terrain ( x, y ) cell acc =
+    case getCell x y terrain of
+        Just Neutral ->
+            Training 1 x y False :: acc
+
+        Just (Active Enemy (ActiveBuilding building)) ->
+            case building.type_ of
+                Tower ->
+                    acc
+
+                _ ->
+                    Training 1 x y True :: acc
+
+        Just (Active Enemy (ActiveUnit unit)) ->
+            case unit.level of
+                1 ->
+                    Training 2 x y False :: acc
+
+                _ ->
+                    acc
+
+        Just (Inactive _ (InactiveBuilding building)) ->
+            case building.type_ of
+                Tower ->
+                    acc
+
+                _ ->
+                    Training 1 x y True :: acc
+
+        _ ->
+            acc
+
+
+
+-- Frontier
 
 
 myFrontierCells : Terrain -> Dict ( Int, Int ) Cell

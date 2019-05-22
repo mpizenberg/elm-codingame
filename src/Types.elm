@@ -8,6 +8,7 @@ module Types exposing
     , Owner(..)
     , Position
     , Terrain
+    , Training
     , Unit
     , cellFromChar
     , cellsLineString
@@ -166,6 +167,18 @@ type alias Unit =
     , level : Int
     , x : Int
     , y : Int
+    }
+
+
+
+-- Training
+
+
+type alias Training =
+    { level : Int
+    , x : Int
+    , y : Int
+    , isMine : Bool
     }
 
 

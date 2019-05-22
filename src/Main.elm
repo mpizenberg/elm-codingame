@@ -61,10 +61,18 @@ update data model =
                 --     Dict.keys frontier
                 --         |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
                 --         |> String.join "\n"
+                training =
+                    Compute.training gameData.terrain frontier
+
+                -- trainingString =
+                --     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
+                --         |> List.map (String.join " ")
+                --         |> String.join "\n"
                 log =
                     String.join "\n\n" <|
                         [ "Turn: " ++ String.fromInt gameData.turn
 
+                        -- , "Training:\n" ++ trainingString
                         -- , "Frontier:\n" ++ frontierPosString
                         -- , "Terrain:\n" ++ terrainToString gameData.terrain
                         ]
