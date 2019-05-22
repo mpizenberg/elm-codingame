@@ -161,6 +161,8 @@ movementComparable { x, y } m =
                 NoCapture ->
                     2
 
+        -- TODO
+        -- Should be better to go toward enemy territory
         distance =
             abs (x - m.x) + abs (y - m.y)
     in
@@ -200,7 +202,7 @@ trainingComparable { x, y } t =
         distance =
             abs (x - t.x) + abs (y - t.y)
     in
-    ( t.level, distance )
+    ( distance, t.level )
 
 
 training : Terrain -> Dict ( Int, Int ) Cell -> List Training
