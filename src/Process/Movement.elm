@@ -34,7 +34,7 @@ order { id, x, y } =
     String.join " " ("MOVE" :: List.map String.fromInt [ id, x, y ])
 
 
-compute : Position -> Terrain -> List Unit -> ( Terrain, List Movement )
+compute : Pos -> Terrain -> List Unit -> ( Terrain, List Movement )
 compute enemyHqPos terrain units =
     let
         distance unit =
@@ -46,7 +46,7 @@ compute enemyHqPos terrain units =
     List.foldl (movementsHelper enemyHqPos) ( terrain, [] ) sortedUnits
 
 
-movementsHelper : Position -> Unit -> ( Terrain, List Movement ) -> ( Terrain, List Movement )
+movementsHelper : Pos -> Unit -> ( Terrain, List Movement ) -> ( Terrain, List Movement )
 movementsHelper enemyHqPos unit ( terrain, movAcc ) =
     let
         noMovement =
@@ -172,7 +172,7 @@ isEnemyTower x y terrain =
             False
 
 
-movementComparable : Position -> Movement -> ( Int, Int )
+movementComparable : Pos -> Movement -> ( Int, Int )
 movementComparable { x, y } m =
     let
         captureScore =

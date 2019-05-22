@@ -142,5 +142,5 @@ update data model =
 
 
 type alias Model =
-    { minesSpots : Array Position
+    { minesSpots : Array Pos
     }

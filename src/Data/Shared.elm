@@ -2,7 +2,7 @@ module Data.Shared exposing
     ( Building
     , BuildingType(..)
     , Owner(..)
-    , Position
+    , Pos
     , Unit
     )
 
@@ -35,7 +35,7 @@ type Owner
     | Enemy
 
 
-type alias Position =
+type alias Pos =
     { x : Int
     , y : Int
     }

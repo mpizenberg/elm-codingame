@@ -44,12 +44,12 @@ spend gold list acc =
                 acc
 
 
-sort : Position -> Terrain -> List Training -> List Training
+sort : Pos -> Terrain -> List Training -> List Training
 sort pos terrain =
     List.sortBy (comparable pos terrain)
 
 
-comparable : Position -> Terrain -> Training -> ( Int, Int, Int )
+comparable : Pos -> Terrain -> Training -> ( Int, Int, Int )
 comparable { x, y } terrain t =
     let
         distance =
