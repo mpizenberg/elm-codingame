@@ -216,6 +216,9 @@ trainingHelper terrain ( x, y ) cell acc =
         Just Neutral ->
             Training 1 x y False :: acc
 
+        Just (Active Enemy ActiveNothing) ->
+            Training 1 x y False :: acc
+
         Just (Active Enemy (ActiveBuilding building)) ->
             case building.type_ of
                 Tower ->
@@ -231,6 +234,9 @@ trainingHelper terrain ( x, y ) cell acc =
 
                 _ ->
                     acc
+
+        Just (Inactive Enemy InactiveNothing) ->
+            Training 1 x y False :: acc
 
         Just (Inactive _ (InactiveBuilding building)) ->
             case building.type_ of

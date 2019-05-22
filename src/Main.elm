@@ -92,13 +92,13 @@ update data model =
                     Compute.training newTerrain frontier
                         |> Compute.sortTraining enemyHqPos
 
-                paidTraining =
-                    Compute.affordableTraining gameData.gold training []
-
                 trainingString =
                     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
                         |> List.map (String.join " ")
                         |> String.join "\n"
+
+                paidTraining =
+                    Compute.affordableTraining gameData.gold training []
 
                 theOrders =
                     String.join ";" <|
@@ -117,8 +117,8 @@ update data model =
                         -- , "Terrain:\n" ++ terrainToString gameData.terrain
                         ]
             in
-            -- ( model, Cmd.batch [ debug log, order theOrders ] )
-            ( model, Cmd.batch [ order theOrders ] )
+            -- ( model, Cmd.batch [ order theOrders ] )
+            ( model, Cmd.batch [ debug log, order theOrders ] )
 
         Err error ->
             ( model, debug (Decode.errorToString error) )
