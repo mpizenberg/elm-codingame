@@ -184,7 +184,7 @@ affordableTraining gold list acc =
                 newGold =
                     gold - 10 * x.level
             in
-            if newGold > 0 then
+            if newGold >= 0 then
                 affordableTraining newGold xs (x :: acc)
 
             else
