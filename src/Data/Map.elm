@@ -2,6 +2,7 @@ module Data.Map exposing
     ( Map
     , get
     , isActiveMe
+    , isMyUnit
     , toString
     , update
     , updateBuilding
@@ -46,6 +47,16 @@ isActiveMe : Int -> Int -> Map -> Bool
 isActiveMe x y map =
     case get x y map of
         Just (Cell.Active Me _) ->
+            True
+
+        _ ->
+            False
+
+
+isMyUnit : Int -> Int -> Map -> Bool
+isMyUnit x y map =
+    case get x y map of
+        Just (Cell.Active Me (Cell.ActiveUnit _)) ->
             True
 
         _ ->

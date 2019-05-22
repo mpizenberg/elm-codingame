@@ -58,23 +58,13 @@ comparable { x, y } map t =
         nbFriendlyNeighbourUnits =
             List.length <|
                 List.filter identity
-                    [ isMyUnit t.x (t.y - 1) map
-                    , isMyUnit (t.x - 1) t.y map
-                    , isMyUnit (t.x + 1) t.y map
-                    , isMyUnit t.x (t.y + 1) map
+                    [ Map.isMyUnit t.x (t.y - 1) map
+                    , Map.isMyUnit (t.x - 1) t.y map
+                    , Map.isMyUnit (t.x + 1) t.y map
+                    , Map.isMyUnit t.x (t.y + 1) map
                     ]
     in
     ( nbFriendlyNeighbourUnits, distance, t.level )
-
-
-isMyUnit : Int -> Int -> Map -> Bool
-isMyUnit x y map =
-    case Map.get x y map of
-        Just (Cell.Active Me (Cell.ActiveUnit _)) ->
-            True
-
-        _ ->
-            False
 
 
 compute : Map -> Dict ( Int, Int ) Cell -> List Training
