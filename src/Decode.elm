@@ -28,8 +28,8 @@ gameData =
         (Decode.field "opponentGold" Decode.int)
         (Decode.field "opponentIncome" Decode.int)
         (Decode.field "terrain" terrainDecoder)
-        (Decode.field "buildings" (Decode.array buildingDecoder))
-        (Decode.field "units" (Decode.array unitDecoder))
+        (Decode.field "buildings" (Decode.list buildingDecoder))
+        (Decode.field "units" (Decode.list unitDecoder))
 
 
 terrainDecoder : Decoder Terrain

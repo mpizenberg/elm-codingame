@@ -54,30 +54,71 @@ update data model =
     case Decode.decodeValue Decode.gameData data of
         Ok gameData ->
             let
+                enemyHqPos =
+                    case getCell 0 0 gameData.terrain of
+                        Just (Active Me _) ->
+                            { x = 11, y = 11 }
+
+                        _ ->
+                            { x = 0, y = 0 }
+
+                ( myUnits, enemyUnits ) =
+                    List.partition (\u -> u.owner == Me) gameData.units
+
+                ( myBuildings, enemyBuildings ) =
+                    List.partition (\b -> b.owner == Me) gameData.buildings
+
+                updatedTerrainWithUnits =
+                    List.foldl updateUnitOnTerrain gameData.terrain gameData.units
+
+                updatedTerrainWithBuildings =
+                    List.foldl updateBuildingOnTerrain updatedTerrainWithUnits gameData.buildings
+
+                ( newTerrain, movements ) =
+                    Compute.movements enemyHqPos updatedTerrainWithBuildings myUnits
+
+                sortedMovements =
+                    List.reverse movements
+
                 frontier =
-                    Compute.myFrontierCells gameData.terrain
+                    Compute.myFrontierCells newTerrain
 
-                -- frontierPosString =
-                --     Dict.keys frontier
-                --         |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
-                --         |> String.join "\n"
+                frontierPosString =
+                    Dict.keys frontier
+                        |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
+                        |> String.join "\n"
+
                 training =
-                    Compute.training gameData.terrain frontier
+                    Compute.training newTerrain frontier
+                        |> Compute.sortTraining enemyHqPos
 
-                -- trainingString =
-                --     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
-                --         |> List.map (String.join " ")
-                --         |> String.join "\n"
+                paidTraining =
+                    Compute.affordableTraining gameData.gold training []
+
+                trainingString =
+                    List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
+                        |> List.map (String.join " ")
+                        |> String.join "\n"
+
+                theOrders =
+                    String.join ";" <|
+                        List.concat
+                            [ List.map movementOrder sortedMovements
+                            , List.map trainingOrder paidTraining
+                            , [ "WAIT" ]
+                            ]
+
                 log =
                     String.join "\n\n" <|
                         [ "Turn: " ++ String.fromInt gameData.turn
+                        , "Training:\n" ++ trainingString
+                        , "Frontier:\n" ++ frontierPosString
 
-                        -- , "Training:\n" ++ trainingString
-                        -- , "Frontier:\n" ++ frontierPosString
                         -- , "Terrain:\n" ++ terrainToString gameData.terrain
                         ]
             in
-            ( model, Cmd.batch [ debug log, order "WAIT" ] )
+            -- ( model, Cmd.batch [ debug log, order theOrders ] )
+            ( model, Cmd.batch [ order theOrders ] )
 
         Err error ->
             ( model, debug (Decode.errorToString error) )

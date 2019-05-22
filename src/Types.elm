@@ -2,9 +2,11 @@ module Types exposing
     ( ActiveCell(..)
     , Building
     , BuildingType(..)
+    , Capture(..)
     , Cell(..)
     , GameData
     , InactiveCell(..)
+    , Movement
     , Owner(..)
     , Position
     , Terrain
@@ -14,7 +16,12 @@ module Types exposing
     , cellsLineString
     , getCell
     , isActiveMe
+    , movementOrder
     , terrainToString
+    , trainingOrder
+    , updateBuildingOnTerrain
+    , updateTerrain
+    , updateUnitOnTerrain
     )
 
 import Array exposing (Array)
@@ -27,8 +34,8 @@ type alias GameData =
     , enemyGold : Int
     , enemyIncome : Int
     , terrain : Terrain
-    , buildings : Array Building
-    , units : Array Unit
+    , buildings : List Building
+    , units : List Unit
     }
 
 
@@ -38,6 +45,31 @@ type alias GameData =
 
 type alias Terrain =
     Array (Array Cell)
+
+
+updateUnitOnTerrain : Unit -> Terrain -> Terrain
+updateUnitOnTerrain u =
+    updateTerrain u.x u.y (Active u.owner (ActiveUnit u))
+
+
+updateBuildingOnTerrain : Building -> Terrain -> Terrain
+updateBuildingOnTerrain b terrain =
+    case getCell b.x b.y terrain of
+        Just (Active _ _) ->
+            updateTerrain b.x b.y (Active b.owner (ActiveBuilding b)) terrain
+
+        _ ->
+            updateTerrain b.x b.y (Inactive b.owner (InactiveBuilding b)) terrain
+
+
+updateTerrain : Int -> Int -> Cell -> Terrain -> Terrain
+updateTerrain x y cell terrain =
+    case Array.get y terrain of
+        Nothing ->
+            terrain
+
+        Just line ->
+            Array.set y (Array.set x cell line) terrain
 
 
 isActiveMe : Int -> Int -> Terrain -> Bool
@@ -82,13 +114,13 @@ type Cell
 
 
 type ActiveCell
-    = ActiveUnknown
+    = ActiveNothing
     | ActiveBuilding Building
     | ActiveUnit Unit
 
 
 type InactiveCell
-    = InactiveUnknown
+    = InactiveNothing
     | InactiveBuilding Building
 
 
@@ -124,16 +156,16 @@ cellFromChar char =
             Ok Neutral
 
         'O' ->
-            Ok (Active Me ActiveUnknown)
+            Ok (Active Me ActiveNothing)
 
         'X' ->
-            Ok (Active Enemy ActiveUnknown)
+            Ok (Active Enemy ActiveNothing)
 
         'o' ->
-            Ok (Inactive Me InactiveUnknown)
+            Ok (Inactive Me InactiveNothing)
 
         'x' ->
-            Ok (Inactive Enemy InactiveUnknown)
+            Ok (Inactive Enemy InactiveNothing)
 
         _ ->
             Err "Incorrect char"
@@ -180,6 +212,34 @@ type alias Training =
     , y : Int
     , isMine : Bool
     }
+
+
+trainingOrder : Training -> String
+trainingOrder { level, x, y } =
+    String.join " " ("TRAIN" :: List.map String.fromInt [ level, x, y ])
+
+
+
+-- Movement
+
+
+type alias Movement =
+    { id : Int
+    , x : Int
+    , y : Int
+    , capture : Capture
+    }
+
+
+type Capture
+    = NoCapture
+    | CaptureNeutral
+    | CaptureEnemy
+
+
+movementOrder : Movement -> String
+movementOrder { id, x, y } =
+    String.join " " ("MOVE" :: List.map String.fromInt [ id, x, y ])
 
 
 

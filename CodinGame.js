@@ -21,7 +21,7 @@ const app = this.Elm.Main.init({ flags: initData });
 app.ports.order.subscribe(answer => {
   console.log(answer);
   const newTime = new Date().getTime();
-  console.error("Time taken: " + (newTime - time));
+  // console.error("Time taken: " + (newTime - time));
 });
 
 // We can also setup an error port for debug.

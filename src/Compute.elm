@@ -1,4 +1,4 @@
-module Compute exposing (myFrontierCells, training)
+module Compute exposing (affordableTraining, movements, myFrontierCells, sortTraining, training)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
@@ -6,7 +6,171 @@ import Types exposing (..)
 
 
 
+-- Movements
+
+
+movements : Position -> Terrain -> List Unit -> ( Terrain, List Movement )
+movements enemyHqPos terrain units =
+    let
+        distance unit =
+            abs (unit.x - enemyHqPos.x) + abs (unit.y - enemyHqPos.y)
+
+        sortedUnits =
+            List.sortBy distance units
+    in
+    List.foldl (movementsHelper enemyHqPos) ( terrain, [] ) sortedUnits
+
+
+movementsHelper : Position -> Unit -> ( Terrain, List Movement ) -> ( Terrain, List Movement )
+movementsHelper enemyHqPos unit ( terrain, movAcc ) =
+    let
+        noMovement =
+            Movement unit.id unit.x unit.y NoCapture
+
+        possibleMovements =
+            List.filterMap identity
+                [ Just noMovement
+                , canMove unit unit.x (unit.y - 1) terrain
+                , canMove unit (unit.x - 1) unit.y terrain
+                , canMove unit (unit.x + 1) unit.y terrain
+                , canMove unit unit.x (unit.y + 1) terrain
+                ]
+
+        sortedMovements =
+            List.sortBy (movementComparable enemyHqPos) possibleMovements
+
+        chosenMovement =
+            Maybe.withDefault noMovement (List.head sortedMovements)
+
+        newMovAcc =
+            if chosenMovement.x == unit.x && chosenMovement.y == unit.y then
+                movAcc
+
+            else
+                chosenMovement :: movAcc
+
+        newTerrain =
+            if chosenMovement.x == unit.x && chosenMovement.y == unit.y then
+                terrain
+
+            else
+                updateTerrain chosenMovement.x chosenMovement.y (Active Me (ActiveUnit unit)) terrain
+                    |> updateTerrain unit.x unit.y (Active Me ActiveNothing)
+    in
+    ( newTerrain, newMovAcc )
+
+
+canMove : Unit -> Int -> Int -> Terrain -> Maybe Movement
+canMove unit x y terrain =
+    case getCell x y terrain of
+        Just Neutral ->
+            Just (Movement unit.id x y CaptureNeutral)
+
+        Just (Active Me ActiveNothing) ->
+            Just (Movement unit.id x y NoCapture)
+
+        Just (Active Enemy ActiveNothing) ->
+            Just (Movement unit.id x y CaptureEnemy)
+
+        Just (Inactive Me InactiveNothing) ->
+            Just (Movement unit.id x y NoCapture)
+
+        Just (Inactive Enemy InactiveNothing) ->
+            Just (Movement unit.id x y CaptureEnemy)
+
+        Just (Active Me (ActiveBuilding building)) ->
+            case building.type_ of
+                Tower ->
+                    Nothing
+
+                _ ->
+                    Just (Movement unit.id x y NoCapture)
+
+        Just (Active Enemy (ActiveBuilding building)) ->
+            case building.type_ of
+                Tower ->
+                    Nothing
+
+                _ ->
+                    Just (Movement unit.id x y CaptureEnemy)
+
+        Just (Active Enemy (ActiveUnit enemyUnit)) ->
+            case ( enemyUnit.level, unit.level ) of
+                ( _, 3 ) ->
+                    Just (Movement unit.id x y CaptureEnemy)
+
+                ( 1, 2 ) ->
+                    Just (Movement unit.id x y CaptureEnemy)
+
+                _ ->
+                    Nothing
+
+        Just (Inactive Enemy (InactiveBuilding building)) ->
+            case building.type_ of
+                Tower ->
+                    Nothing
+
+                _ ->
+                    Just (Movement unit.id x y CaptureEnemy)
+
+        _ ->
+            Nothing
+
+
+movementComparable : Position -> Movement -> ( Int, Int )
+movementComparable { x, y } m =
+    let
+        captureScore =
+            case m.capture of
+                CaptureEnemy ->
+                    0
+
+                CaptureNeutral ->
+                    1
+
+                NoCapture ->
+                    2
+
+        distance =
+            abs (x - m.x) + abs (y - m.y)
+    in
+    ( captureScore, distance )
+
+
+
 -- Training
+
+
+affordableTraining : Int -> List Training -> List Training -> List Training
+affordableTraining gold list acc =
+    case list of
+        [] ->
+            acc
+
+        x :: xs ->
+            let
+                newGold =
+                    gold - 10 * x.level
+            in
+            if newGold > 0 then
+                affordableTraining newGold xs (x :: acc)
+
+            else
+                acc
+
+
+sortTraining : Position -> List Training -> List Training
+sortTraining pos =
+    List.sortBy (trainingComparable pos)
+
+
+trainingComparable : Position -> Training -> ( Int, Int )
+trainingComparable { x, y } t =
+    let
+        distance =
+            abs (x - t.x) + abs (y - t.y)
+    in
+    ( t.level, distance )
 
 
 training : Terrain -> Dict ( Int, Int ) Cell -> List Training
