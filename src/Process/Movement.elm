@@ -38,11 +38,11 @@ compute enemyHqPos map units =
         sortedUnits =
             List.sortBy distance units
     in
-    List.foldl (movementsHelper enemyHqPos) ( map, [] ) sortedUnits
+    List.foldl (helper enemyHqPos) ( map, [] ) sortedUnits
 
 
-movementsHelper : Pos -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
-movementsHelper enemyHqPos unit ( map, movAcc ) =
+helper : Pos -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
+helper enemyHqPos unit ( map, movAcc ) =
     let
         noMovement =
             Movement unit.id unit.x unit.y NoCapture
@@ -57,7 +57,7 @@ movementsHelper enemyHqPos unit ( map, movAcc ) =
                 ]
 
         sortedMovements =
-            List.sortBy (movementComparable enemyHqPos) possibleMovements
+            List.sortBy (comparable enemyHqPos) possibleMovements
 
         chosenMovement =
             Maybe.withDefault noMovement (List.head sortedMovements)
@@ -167,8 +167,8 @@ isEnemyTower x y map =
             False
 
 
-movementComparable : Pos -> Movement -> ( Int, Int )
-movementComparable { x, y } m =
+comparable : Pos -> Movement -> ( Int, Int )
+comparable { x, y } m =
     let
         captureScore =
             case m.capture of
