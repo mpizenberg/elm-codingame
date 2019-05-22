@@ -3,7 +3,7 @@ module Data.Map exposing
     , cellsLineString
     , get
     , isActiveMe
-    , mapToString
+    , toString
     , update
     , updateBuilding
     , updateUnit
@@ -59,8 +59,8 @@ get x y map =
         |> Maybe.andThen (Array.get x)
 
 
-mapToString : Map -> String
-mapToString map =
+toString : Map -> String
+toString map =
     Array.toList map
         |> List.map cellsLineString
         |> String.join "\n"

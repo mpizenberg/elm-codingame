@@ -127,7 +127,7 @@ update data model =
                         , "TrainingComparable:\n" ++ trainingComparableString
                         , "Frontier:\n" ++ frontierPosString
 
-                        -- , "Map:\n" ++ mapToString newMap
+                        -- , "Map:\n" ++ Map.toString newMap
                         ]
             in
             -- ( model, Cmd.batch [ order theOrders ] )
