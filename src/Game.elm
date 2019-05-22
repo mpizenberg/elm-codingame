@@ -1,6 +1,5 @@
 module Game exposing (Data, State, strategy)
 
-import Array exposing (Array)
 import Data.Cell as Cell
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
@@ -11,7 +10,7 @@ import Process.Training as Training
 
 
 type alias State =
-    { minesSpots : Array Pos
+    { minesSpots : List Pos
     }
 
 

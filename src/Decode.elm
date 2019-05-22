@@ -8,11 +8,9 @@ import Game
 import Json.Decode as Decode exposing (Decoder, Value)
 
 
-initData : Decoder (Array Pos)
+initData : Decoder (List Pos)
 initData =
-    Decode.field "mines" <|
-        Decode.map Array.fromList <|
-            Decode.list pos
+    Decode.field "mines" (Decode.list pos)
 
 
 pos : Decoder Pos

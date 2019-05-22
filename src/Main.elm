@@ -41,7 +41,7 @@ init data =
             ( Game.State minesSpots, debug "Init Done!" )
 
         Err error ->
-            ( Game.State Array.empty, debug (Decode.errorToString error) )
+            ( Game.State [], debug (Decode.errorToString error) )
 
 
 {-| Function called during game loop with game data of current turn.
