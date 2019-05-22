@@ -31,7 +31,7 @@ helperFrontier map x y cells =
 
 isAtMyFrontier : Int -> Int -> Map -> Maybe Cell
 isAtMyFrontier x y map =
-    case Map.getCell x y map of
+    case Map.get x y map of
         Nothing ->
             Nothing
 

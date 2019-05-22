@@ -1,7 +1,7 @@
 module Data.Map exposing
     ( Map
     , cellsLineString
-    , getCell
+    , get
     , isActiveMe
     , mapToString
     , update
@@ -25,7 +25,7 @@ updateUnit u =
 
 updateBuilding : Building -> Map -> Map
 updateBuilding b map =
-    case getCell b.x b.y map of
+    case get b.x b.y map of
         Just (Cell.Active _ _) ->
             update b.x b.y (Cell.Active b.owner (Cell.ActiveBuilding b)) map
 
@@ -45,7 +45,7 @@ update x y cell map =
 
 isActiveMe : Int -> Int -> Map -> Bool
 isActiveMe x y map =
-    case getCell x y map of
+    case get x y map of
         Just (Cell.Active Me _) ->
             True
 
@@ -53,8 +53,8 @@ isActiveMe x y map =
             False
 
 
-getCell : Int -> Int -> Map -> Maybe Cell
-getCell x y map =
+get : Int -> Int -> Map -> Maybe Cell
+get x y map =
     Array.get y map
         |> Maybe.andThen (Array.get x)
 

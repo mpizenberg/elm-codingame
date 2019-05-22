@@ -69,7 +69,7 @@ comparable { x, y } map t =
 
 isMyUnit : Int -> Int -> Map -> Bool
 isMyUnit x y map =
-    case Map.getCell x y map of
+    case Map.get x y map of
         Just (Cell.Active Me (Cell.ActiveUnit _)) ->
             True
 
@@ -84,7 +84,7 @@ compute map frontier =
 
 trainingHelper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
 trainingHelper map ( x, y ) cell acc =
-    case Map.getCell x y map of
+    case Map.get x y map of
         Just Cell.Neutral ->
             Training 1 x y False :: acc
 

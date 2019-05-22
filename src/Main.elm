@@ -59,7 +59,7 @@ update data model =
         Ok gameData ->
             let
                 enemyHqPos =
-                    case Map.getCell 0 0 gameData.map of
+                    case Map.get 0 0 gameData.map of
                         Just (Cell.Active Me _) ->
                             { x = 11, y = 11 }
 

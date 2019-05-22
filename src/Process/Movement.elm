@@ -91,7 +91,7 @@ canMove unit x y map =
         Nothing
 
     else
-        case Map.getCell x y map of
+        case Map.get x y map of
             Just Cell.Neutral ->
                 Just (Movement unit.id x y CaptureNeutral)
 
@@ -148,7 +148,7 @@ canMove unit x y map =
 
 isEnemyProtected : Int -> Int -> Map -> Bool
 isEnemyProtected x y map =
-    case Map.getCell x y map of
+    case Map.get x y map of
         Just (Cell.Active Me _) ->
             False
 
@@ -164,7 +164,7 @@ isEnemyProtected x y map =
 
 isEnemyTower : Int -> Int -> Map -> Bool
 isEnemyTower x y map =
-    case Map.getCell x y map of
+    case Map.get x y map of
         Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
             building.type_ == Tower
 
