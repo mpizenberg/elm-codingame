@@ -1,7 +1,7 @@
 module Data.Cell exposing
-    ( ActiveCell(..)
+    ( Active(..)
     , Cell(..)
-    , InactiveCell(..)
+    , Inactive(..)
     , fromChar
     , toChar
     )
@@ -12,17 +12,17 @@ import Data.Shared exposing (..)
 type Cell
     = Void
     | Neutral
-    | Active Owner ActiveCell
-    | Inactive Owner InactiveCell
+    | Active Owner Active
+    | Inactive Owner Inactive
 
 
-type ActiveCell
+type Active
     = ActiveNothing
     | ActiveBuilding Building
     | ActiveUnit Unit
 
 
-type InactiveCell
+type Inactive
     = InactiveNothing
     | InactiveBuilding Building
 
