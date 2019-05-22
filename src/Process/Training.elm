@@ -69,11 +69,11 @@ comparable { x, y } map t =
 
 compute : Map -> Dict ( Int, Int ) Cell -> List Training
 compute map frontier =
-    Dict.foldl (trainingHelper map) [] frontier
+    Dict.foldl (helper map) [] frontier
 
 
-trainingHelper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
-trainingHelper map ( x, y ) cell acc =
+helper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
+helper map ( x, y ) cell acc =
     case Map.get x y map of
         Just Cell.Neutral ->
             Training 1 x y False :: acc
