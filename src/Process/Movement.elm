@@ -1,12 +1,7 @@
 module Process.Movement exposing
-    ( Capture(..)
+    ( Capture
     , Movement
-    , canMove
     , compute
-    , isEnemyProtected
-    , isEnemyTower
-    , movementComparable
-    , movementsHelper
     , order
     )
 
