@@ -8,8 +8,8 @@ module Process.Training exposing
     )
 
 import Data.Cell as Cell exposing (Cell)
+import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain as Terrain exposing (Terrain)
 import Dict exposing (Dict)
 
 
@@ -44,13 +44,13 @@ spend gold list acc =
                 acc
 
 
-sort : Pos -> Terrain -> List Training -> List Training
-sort pos terrain =
-    List.sortBy (comparable pos terrain)
+sort : Pos -> Map -> List Training -> List Training
+sort pos map =
+    List.sortBy (comparable pos map)
 
 
-comparable : Pos -> Terrain -> Training -> ( Int, Int, Int )
-comparable { x, y } terrain t =
+comparable : Pos -> Map -> Training -> ( Int, Int, Int )
+comparable { x, y } map t =
     let
         distance =
             abs (x - t.x) + abs (y - t.y)
@@ -58,18 +58,18 @@ comparable { x, y } terrain t =
         nbFriendlyNeighbourUnits =
             List.length <|
                 List.filter identity
-                    [ isMyUnit t.x (t.y - 1) terrain
-                    , isMyUnit (t.x - 1) t.y terrain
-                    , isMyUnit (t.x + 1) t.y terrain
-                    , isMyUnit t.x (t.y + 1) terrain
+                    [ isMyUnit t.x (t.y - 1) map
+                    , isMyUnit (t.x - 1) t.y map
+                    , isMyUnit (t.x + 1) t.y map
+                    , isMyUnit t.x (t.y + 1) map
                     ]
     in
     ( nbFriendlyNeighbourUnits, distance, t.level )
 
 
-isMyUnit : Int -> Int -> Terrain -> Bool
-isMyUnit x y terrain =
-    case Terrain.getCell x y terrain of
+isMyUnit : Int -> Int -> Map -> Bool
+isMyUnit x y map =
+    case Map.getCell x y map of
         Just (Cell.Active Me (Cell.ActiveUnit _)) ->
             True
 
@@ -77,14 +77,14 @@ isMyUnit x y terrain =
             False
 
 
-compute : Terrain -> Dict ( Int, Int ) Cell -> List Training
-compute terrain frontier =
-    Dict.foldl (trainingHelper terrain) [] frontier
+compute : Map -> Dict ( Int, Int ) Cell -> List Training
+compute map frontier =
+    Dict.foldl (trainingHelper map) [] frontier
 
 
-trainingHelper : Terrain -> ( Int, Int ) -> Cell -> List Training -> List Training
-trainingHelper terrain ( x, y ) cell acc =
-    case Terrain.getCell x y terrain of
+trainingHelper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
+trainingHelper map ( x, y ) cell acc =
+    case Map.getCell x y map of
         Just Cell.Neutral ->
             Training 1 x y False :: acc
 

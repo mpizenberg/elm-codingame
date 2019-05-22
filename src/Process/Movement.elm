@@ -11,8 +11,8 @@ module Process.Movement exposing
     )
 
 import Data.Cell as Cell exposing (Cell)
+import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain as Terrain exposing (Terrain)
 
 
 type alias Movement =
@@ -34,8 +34,8 @@ order { id, x, y } =
     String.join " " ("MOVE" :: List.map String.fromInt [ id, x, y ])
 
 
-compute : Pos -> Terrain -> List Unit -> ( Terrain, List Movement )
-compute enemyHqPos terrain units =
+compute : Pos -> Map -> List Unit -> ( Map, List Movement )
+compute enemyHqPos map units =
     let
         distance unit =
             abs (unit.x - enemyHqPos.x) + abs (unit.y - enemyHqPos.y)
@@ -43,11 +43,11 @@ compute enemyHqPos terrain units =
         sortedUnits =
             List.sortBy distance units
     in
-    List.foldl (movementsHelper enemyHqPos) ( terrain, [] ) sortedUnits
+    List.foldl (movementsHelper enemyHqPos) ( map, [] ) sortedUnits
 
 
-movementsHelper : Pos -> Unit -> ( Terrain, List Movement ) -> ( Terrain, List Movement )
-movementsHelper enemyHqPos unit ( terrain, movAcc ) =
+movementsHelper : Pos -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
+movementsHelper enemyHqPos unit ( map, movAcc ) =
     let
         noMovement =
             Movement unit.id unit.x unit.y NoCapture
@@ -55,10 +55,10 @@ movementsHelper enemyHqPos unit ( terrain, movAcc ) =
         possibleMovements =
             List.filterMap identity
                 [ Just noMovement
-                , canMove unit unit.x (unit.y - 1) terrain
-                , canMove unit (unit.x - 1) unit.y terrain
-                , canMove unit (unit.x + 1) unit.y terrain
-                , canMove unit unit.x (unit.y + 1) terrain
+                , canMove unit unit.x (unit.y - 1) map
+                , canMove unit (unit.x - 1) unit.y map
+                , canMove unit (unit.x + 1) unit.y map
+                , canMove unit unit.x (unit.y + 1) map
                 ]
 
         sortedMovements =
@@ -74,24 +74,24 @@ movementsHelper enemyHqPos unit ( terrain, movAcc ) =
             else
                 chosenMovement :: movAcc
 
-        newTerrain =
+        newMap =
             if chosenMovement.x == unit.x && chosenMovement.y == unit.y then
-                terrain
+                map
 
             else
-                Terrain.update chosenMovement.x chosenMovement.y (Cell.Active Me (Cell.ActiveUnit unit)) terrain
-                    |> Terrain.update unit.x unit.y (Cell.Active Me Cell.ActiveNothing)
+                Map.update chosenMovement.x chosenMovement.y (Cell.Active Me (Cell.ActiveUnit unit)) map
+                    |> Map.update unit.x unit.y (Cell.Active Me Cell.ActiveNothing)
     in
-    ( newTerrain, newMovAcc )
+    ( newMap, newMovAcc )
 
 
-canMove : Unit -> Int -> Int -> Terrain -> Maybe Movement
-canMove unit x y terrain =
-    if isEnemyProtected x y terrain then
+canMove : Unit -> Int -> Int -> Map -> Maybe Movement
+canMove unit x y map =
+    if isEnemyProtected x y map then
         Nothing
 
     else
-        case Terrain.getCell x y terrain of
+        case Map.getCell x y map of
             Just Cell.Neutral ->
                 Just (Movement unit.id x y CaptureNeutral)
 
@@ -146,9 +146,9 @@ canMove unit x y terrain =
                 Nothing
 
 
-isEnemyProtected : Int -> Int -> Terrain -> Bool
-isEnemyProtected x y terrain =
-    case Terrain.getCell x y terrain of
+isEnemyProtected : Int -> Int -> Map -> Bool
+isEnemyProtected x y map =
+    case Map.getCell x y map of
         Just (Cell.Active Me _) ->
             False
 
@@ -156,15 +156,15 @@ isEnemyProtected x y terrain =
             False
 
         _ ->
-            isEnemyTower x (y - 1) terrain
-                || isEnemyTower (x - 1) y terrain
-                || isEnemyTower (x + 1) y terrain
-                || isEnemyTower x (y + 1) terrain
+            isEnemyTower x (y - 1) map
+                || isEnemyTower (x - 1) y map
+                || isEnemyTower (x + 1) y map
+                || isEnemyTower x (y + 1) map
 
 
-isEnemyTower : Int -> Int -> Terrain -> Bool
-isEnemyTower x y terrain =
-    case Terrain.getCell x y terrain of
+isEnemyTower : Int -> Int -> Map -> Bool
+isEnemyTower x y map =
+    case Map.getCell x y map of
         Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
             building.type_ == Tower
 

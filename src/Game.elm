@@ -1,7 +1,7 @@
 module Game exposing (Data)
 
+import Data.Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain exposing (Terrain)
 
 
 type alias Data =
@@ -10,7 +10,7 @@ type alias Data =
     , income : Int
     , enemyGold : Int
     , enemyIncome : Int
-    , terrain : Terrain
+    , map : Map
     , buildings : List Building
     , units : List Unit
     }

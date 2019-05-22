@@ -2,8 +2,8 @@ port module Main exposing (main)
 
 import Array exposing (Array)
 import Data.Cell as Cell exposing (Cell)
+import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain as Terrain exposing (Terrain)
 import Decode
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value)
@@ -59,7 +59,7 @@ update data model =
         Ok gameData ->
             let
                 enemyHqPos =
-                    case Terrain.getCell 0 0 gameData.terrain of
+                    case Map.getCell 0 0 gameData.map of
                         Just (Cell.Active Me _) ->
                             { x = 11, y = 11 }
 
@@ -72,20 +72,20 @@ update data model =
                 ( myBuildings, enemyBuildings ) =
                     List.partition (\b -> b.owner == Me) gameData.buildings
 
-                updatedTerrainWithUnits =
-                    List.foldl Terrain.updateUnit gameData.terrain gameData.units
+                updatedMapWithUnits =
+                    List.foldl Map.updateUnit gameData.map gameData.units
 
-                updatedTerrainWithBuildings =
-                    List.foldl Terrain.updateBuilding updatedTerrainWithUnits gameData.buildings
+                updatedMapWithBuildings =
+                    List.foldl Map.updateBuilding updatedMapWithUnits gameData.buildings
 
-                ( newTerrain, movements ) =
-                    Movement.compute enemyHqPos updatedTerrainWithBuildings myUnits
+                ( newMap, movements ) =
+                    Movement.compute enemyHqPos updatedMapWithBuildings myUnits
 
                 sortedMovements =
                     List.reverse movements
 
                 frontier =
-                    Frontier.compute newTerrain
+                    Frontier.compute newMap
 
                 frontierPosString =
                     Dict.keys frontier
@@ -93,10 +93,10 @@ update data model =
                         |> String.join "\n"
 
                 training =
-                    Training.compute newTerrain frontier
+                    Training.compute newMap frontier
 
                 sortedTraining =
-                    Training.sort enemyHqPos newTerrain training
+                    Training.sort enemyHqPos newMap training
 
                 trainingString =
                     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
@@ -104,7 +104,7 @@ update data model =
                         |> String.join "\n"
 
                 trainingComparableString =
-                    List.map (Training.comparable enemyHqPos newTerrain) training
+                    List.map (Training.comparable enemyHqPos newMap) training
                         |> List.map (\( a, b, c ) -> [ String.fromInt a, String.fromInt b, String.fromInt c ])
                         |> List.map (String.join " ")
                         |> String.join "\n"
@@ -127,7 +127,7 @@ update data model =
                         , "TrainingComparable:\n" ++ trainingComparableString
                         , "Frontier:\n" ++ frontierPosString
 
-                        -- , "Terrain:\n" ++ terrainToString newTerrain
+                        -- , "Map:\n" ++ mapToString newMap
                         ]
             in
             -- ( model, Cmd.batch [ order theOrders ] )

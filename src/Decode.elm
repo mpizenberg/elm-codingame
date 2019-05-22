@@ -2,8 +2,8 @@ module Decode exposing (gameData, initData)
 
 import Array exposing (Array)
 import Data.Cell as Cell exposing (Cell)
+import Data.Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain exposing (Terrain)
 import Game
 import Json.Decode as Decode exposing (Decoder, Value)
 
@@ -30,13 +30,13 @@ gameData =
         (Decode.field "income" Decode.int)
         (Decode.field "opponentGold" Decode.int)
         (Decode.field "opponentIncome" Decode.int)
-        (Decode.field "terrain" terrainDecoder)
+        (Decode.field "terrain" mapDecoder)
         (Decode.field "buildings" (Decode.list buildingDecoder))
         (Decode.field "units" (Decode.list unitDecoder))
 
 
-terrainDecoder : Decoder Terrain
-terrainDecoder =
+mapDecoder : Decoder Map
+mapDecoder =
     Decode.map Array.fromList help1
         |> Decode.array
 

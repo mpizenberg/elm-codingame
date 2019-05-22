@@ -1,37 +1,37 @@
 module Process.Frontier exposing (compute)
 
 import Data.Cell as Cell exposing (Cell)
+import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
-import Data.Terrain as Terrain exposing (Terrain)
 import Dict exposing (Dict)
 
 
-compute : Terrain -> Dict ( Int, Int ) Cell
-compute terrain =
-    helperFrontier terrain 0 0 Dict.empty
+compute : Map -> Dict ( Int, Int ) Cell
+compute map =
+    helperFrontier map 0 0 Dict.empty
 
 
-helperFrontier : Terrain -> Int -> Int -> Dict ( Int, Int ) Cell -> Dict ( Int, Int ) Cell
-helperFrontier terrain x y cells =
+helperFrontier : Map -> Int -> Int -> Dict ( Int, Int ) Cell -> Dict ( Int, Int ) Cell
+helperFrontier map x y cells =
     case ( x, y ) of
         ( _, 12 ) ->
             cells
 
         ( 12, _ ) ->
-            helperFrontier terrain 0 (y + 1) cells
+            helperFrontier map 0 (y + 1) cells
 
         _ ->
-            case isAtMyFrontier x y terrain of
+            case isAtMyFrontier x y map of
                 Just cell ->
-                    helperFrontier terrain (x + 1) y (Dict.insert ( x, y ) cell cells)
+                    helperFrontier map (x + 1) y (Dict.insert ( x, y ) cell cells)
 
                 Nothing ->
-                    helperFrontier terrain (x + 1) y cells
+                    helperFrontier map (x + 1) y cells
 
 
-isAtMyFrontier : Int -> Int -> Terrain -> Maybe Cell
-isAtMyFrontier x y terrain =
-    case Terrain.getCell x y terrain of
+isAtMyFrontier : Int -> Int -> Map -> Maybe Cell
+isAtMyFrontier x y map =
+    case Map.getCell x y map of
         Nothing ->
             Nothing
 
@@ -42,16 +42,16 @@ isAtMyFrontier x y terrain =
             Nothing
 
         Just cell ->
-            if hasActiveFriendlyNeighbour x y terrain then
+            if hasActiveFriendlyNeighbour x y map then
                 Just cell
 
             else
                 Nothing
 
 
-hasActiveFriendlyNeighbour : Int -> Int -> Terrain -> Bool
-hasActiveFriendlyNeighbour x y terrain =
-    Terrain.isActiveMe (x - 1) y terrain
-        || Terrain.isActiveMe (x + 1) y terrain
-        || Terrain.isActiveMe x (y - 1) terrain
-        || Terrain.isActiveMe x (y + 1) terrain
+hasActiveFriendlyNeighbour : Int -> Int -> Map -> Bool
+hasActiveFriendlyNeighbour x y map =
+    Map.isActiveMe (x - 1) y map
+        || Map.isActiveMe (x + 1) y map
+        || Map.isActiveMe x (y - 1) map
+        || Map.isActiveMe x (y + 1) map
