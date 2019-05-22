@@ -37,17 +37,16 @@ strategy data state =
                 _ ->
                     { x = 0, y = 0 }
 
-        ( myUnits, enemyUnits ) =
-            List.partition (\u -> u.owner == Me) data.units
-
-        ( myBuildings, enemyBuildings ) =
-            List.partition (\b -> b.owner == Me) data.buildings
-
+        -- Update the Map with the positions of units and buildings
         updatedMapWithUnits =
             List.foldl Map.updateUnit data.map data.units
 
         updatedMapWithBuildings =
             List.foldl Map.updateBuilding updatedMapWithUnits data.buildings
+
+        -- Compute my units movements
+        myUnits =
+            List.filter (\u -> u.owner == Me) data.units
 
         ( newMap, movements ) =
             Movement.compute enemyHqPos updatedMapWithBuildings myUnits
@@ -55,13 +54,9 @@ strategy data state =
         sortedMovements =
             List.reverse movements
 
+        -- Compute my trainings
         frontier =
             Frontier.compute newMap
-
-        frontierPosString =
-            Dict.keys frontier
-                |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
-                |> String.join "\n"
 
         training =
             Training.compute newMap frontier
@@ -69,6 +64,19 @@ strategy data state =
         sortedTraining =
             Training.sort enemyHqPos newMap training
 
+        paidTraining =
+            Training.spend data.gold sortedTraining []
+
+        -- Build the orders from movements and training
+        theOrders =
+            String.join ";" <|
+                List.concat
+                    [ List.map Movement.order sortedMovements
+                    , List.map Training.order paidTraining
+                    , [ "WAIT" ]
+                    ]
+
+        -- Some log info
         trainingString =
             List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
                 |> List.map (String.join " ")
@@ -80,16 +88,10 @@ strategy data state =
                 |> List.map (String.join " ")
                 |> String.join "\n"
 
-        paidTraining =
-            Training.spend data.gold sortedTraining []
-
-        theOrders =
-            String.join ";" <|
-                List.concat
-                    [ List.map Movement.order sortedMovements
-                    , List.map Training.order paidTraining
-                    , [ "WAIT" ]
-                    ]
+        frontierPosString =
+            Dict.keys frontier
+                |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
+                |> String.join "\n"
 
         log =
             String.join "\n\n" <|
