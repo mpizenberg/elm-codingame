@@ -1,4 +1,4 @@
-module Compute exposing (affordableTraining, movements, myFrontierCells, sortTraining, training)
+module Compute exposing (affordableTraining, movements, myFrontierCells, sortTraining, training, trainingComparable)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
@@ -191,18 +191,37 @@ affordableTraining gold list acc =
                 acc
 
 
-sortTraining : Position -> List Training -> List Training
-sortTraining pos =
-    List.sortBy (trainingComparable pos)
+sortTraining : Position -> Terrain -> List Training -> List Training
+sortTraining pos terrain =
+    List.sortBy (trainingComparable pos terrain)
 
 
-trainingComparable : Position -> Training -> ( Int, Int )
-trainingComparable { x, y } t =
+trainingComparable : Position -> Terrain -> Training -> ( Int, Int, Int )
+trainingComparable { x, y } terrain t =
     let
         distance =
             abs (x - t.x) + abs (y - t.y)
+
+        nbFriendlyNeighbourUnits =
+            List.length <|
+                List.filter identity
+                    [ isMyUnit t.x (t.y - 1) terrain
+                    , isMyUnit (t.x - 1) t.y terrain
+                    , isMyUnit (t.x + 1) t.y terrain
+                    , isMyUnit t.x (t.y + 1) terrain
+                    ]
     in
-    ( distance, t.level )
+    ( nbFriendlyNeighbourUnits, distance, t.level )
+
+
+isMyUnit : Int -> Int -> Terrain -> Bool
+isMyUnit x y terrain =
+    case getCell x y terrain of
+        Just (Active Me (ActiveUnit _)) ->
+            True
+
+        _ ->
+            False
 
 
 training : Terrain -> Dict ( Int, Int ) Cell -> List Training

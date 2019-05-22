@@ -90,15 +90,23 @@ update data model =
 
                 training =
                     Compute.training newTerrain frontier
-                        |> Compute.sortTraining enemyHqPos
+
+                sortedTraining =
+                    Compute.sortTraining enemyHqPos newTerrain training
 
                 trainingString =
                     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
                         |> List.map (String.join " ")
                         |> String.join "\n"
 
+                trainingComparableString =
+                    List.map (Compute.trainingComparable enemyHqPos newTerrain) training
+                        |> List.map (\( a, b, c ) -> [ String.fromInt a, String.fromInt b, String.fromInt c ])
+                        |> List.map (String.join " ")
+                        |> String.join "\n"
+
                 paidTraining =
-                    Compute.affordableTraining gameData.gold training []
+                    Compute.affordableTraining gameData.gold sortedTraining []
 
                 theOrders =
                     String.join ";" <|
@@ -112,9 +120,10 @@ update data model =
                     String.join "\n\n" <|
                         [ "Turn: " ++ String.fromInt gameData.turn
                         , "Training:\n" ++ trainingString
+                        , "TrainingComparable:\n" ++ trainingComparableString
                         , "Frontier:\n" ++ frontierPosString
 
-                        -- , "Terrain:\n" ++ terrainToString gameData.terrain
+                        -- , "Terrain:\n" ++ terrainToString newTerrain
                         ]
             in
             -- ( model, Cmd.batch [ order theOrders ] )
