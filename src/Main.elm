@@ -1,11 +1,15 @@
 port module Main exposing (main)
 
 import Array exposing (Array)
-import Compute
+import Data.Cell as Cell exposing (Cell)
+import Data.Shared exposing (..)
+import Data.Terrain as Terrain exposing (Terrain)
 import Decode
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value)
-import Types exposing (..)
+import Process.Frontier as Frontier
+import Process.Movement as Movement
+import Process.Training as Training
 
 
 main : Program Value Model Value
@@ -55,8 +59,8 @@ update data model =
         Ok gameData ->
             let
                 enemyHqPos =
-                    case getCell 0 0 gameData.terrain of
-                        Just (Active Me _) ->
+                    case Terrain.getCell 0 0 gameData.terrain of
+                        Just (Cell.Active Me _) ->
                             { x = 11, y = 11 }
 
                         _ ->
@@ -69,19 +73,19 @@ update data model =
                     List.partition (\b -> b.owner == Me) gameData.buildings
 
                 updatedTerrainWithUnits =
-                    List.foldl updateUnitOnTerrain gameData.terrain gameData.units
+                    List.foldl Terrain.updateUnit gameData.terrain gameData.units
 
                 updatedTerrainWithBuildings =
-                    List.foldl updateBuildingOnTerrain updatedTerrainWithUnits gameData.buildings
+                    List.foldl Terrain.updateBuilding updatedTerrainWithUnits gameData.buildings
 
                 ( newTerrain, movements ) =
-                    Compute.movements enemyHqPos updatedTerrainWithBuildings myUnits
+                    Movement.compute enemyHqPos updatedTerrainWithBuildings myUnits
 
                 sortedMovements =
                     List.reverse movements
 
                 frontier =
-                    Compute.myFrontierCells newTerrain
+                    Frontier.compute newTerrain
 
                 frontierPosString =
                     Dict.keys frontier
@@ -89,10 +93,10 @@ update data model =
                         |> String.join "\n"
 
                 training =
-                    Compute.training newTerrain frontier
+                    Training.compute newTerrain frontier
 
                 sortedTraining =
-                    Compute.sortTraining enemyHqPos newTerrain training
+                    Training.sort enemyHqPos newTerrain training
 
                 trainingString =
                     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
@@ -100,19 +104,19 @@ update data model =
                         |> String.join "\n"
 
                 trainingComparableString =
-                    List.map (Compute.trainingComparable enemyHqPos newTerrain) training
+                    List.map (Training.comparable enemyHqPos newTerrain) training
                         |> List.map (\( a, b, c ) -> [ String.fromInt a, String.fromInt b, String.fromInt c ])
                         |> List.map (String.join " ")
                         |> String.join "\n"
 
                 paidTraining =
-                    Compute.affordableTraining gameData.gold sortedTraining []
+                    Training.spend gameData.gold sortedTraining []
 
                 theOrders =
                     String.join ";" <|
                         List.concat
-                            [ List.map movementOrder sortedMovements
-                            , List.map trainingOrder paidTraining
+                            [ List.map Movement.order sortedMovements
+                            , List.map Training.order paidTraining
                             , [ "WAIT" ]
                             ]
 

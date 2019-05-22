@@ -1,8 +1,11 @@
 module Decode exposing (gameData, initData)
 
 import Array exposing (Array)
+import Data.Cell as Cell exposing (Cell)
+import Data.Shared exposing (..)
+import Data.Terrain exposing (Terrain)
+import Game
 import Json.Decode as Decode exposing (Decoder, Value)
-import Types exposing (..)
 
 
 initData : Decoder (Array Position)
@@ -19,9 +22,9 @@ positionDecoder =
         (Decode.field "y" Decode.int)
 
 
-gameData : Decoder GameData
+gameData : Decoder Game.Data
 gameData =
-    Decode.map8 GameData
+    Decode.map8 Game.Data
         (Decode.field "turn" Decode.int)
         (Decode.field "gold" Decode.int)
         (Decode.field "income" Decode.int)
@@ -53,7 +56,7 @@ help2 chars =
 
 cellDecoderHelper : Char -> Decoder Cell
 cellDecoderHelper char =
-    case cellFromChar char of
+    case Cell.fromChar char of
         Ok cell ->
             Decode.succeed cell
 
