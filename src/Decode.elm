@@ -12,11 +12,11 @@ initData : Decoder (Array Pos)
 initData =
     Decode.field "mines" <|
         Decode.map Array.fromList <|
-            Decode.list posDecoder
+            Decode.list pos
 
 
-posDecoder : Decoder Pos
-posDecoder =
+pos : Decoder Pos
+pos =
     Decode.map2 Pos
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
@@ -30,32 +30,26 @@ gameData =
         (Decode.field "income" Decode.int)
         (Decode.field "opponentGold" Decode.int)
         (Decode.field "opponentIncome" Decode.int)
-        (Decode.field "terrain" mapDecoder)
-        (Decode.field "buildings" (Decode.list buildingDecoder))
-        (Decode.field "units" (Decode.list unitDecoder))
+        (Decode.field "terrain" map)
+        (Decode.field "buildings" (Decode.list building))
+        (Decode.field "units" (Decode.list unit))
 
 
-mapDecoder : Decoder Map
-mapDecoder =
-    Decode.map Array.fromList help1
+map : Decoder Map
+map =
+    Decode.map Array.fromList mapLine
         |> Decode.array
 
 
-help1 : Decoder (List Cell)
-help1 =
+mapLine : Decoder (List Cell)
+mapLine =
     Decode.string
         |> Decode.map String.toList
-        |> Decode.andThen help2
+        |> Decode.andThen (combine << List.map cellHelper)
 
 
-help2 : List Char -> Decoder (List Cell)
-help2 chars =
-    List.map cellDecoderHelper chars
-        |> decodeCombine
-
-
-cellDecoderHelper : Char -> Decoder Cell
-cellDecoderHelper char =
+cellHelper : Char -> Decoder Cell
+cellHelper char =
     case Cell.fromChar char of
         Ok cell ->
             Decode.succeed cell
@@ -64,28 +58,28 @@ cellDecoderHelper char =
             Decode.fail msg
 
 
-decodeCombine : List (Decoder a) -> Decoder (List a)
-decodeCombine =
+combine : List (Decoder a) -> Decoder (List a)
+combine =
     List.foldr (Decode.map2 (::)) (Decode.succeed [])
 
 
-buildingDecoder : Decoder Building
-buildingDecoder =
+building : Decoder Building
+building =
     Decode.map4 Building
-        (Decode.field "owner" ownerDecoder)
-        (Decode.field "buildingType" buildingTypeDecoder)
+        (Decode.field "owner" owner)
+        (Decode.field "buildingType" buildingType)
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
 
 
-ownerDecoder : Decoder Owner
-ownerDecoder =
+owner : Decoder Owner
+owner =
     Decode.int
-        |> Decode.andThen ownerDecoderHelper
+        |> Decode.andThen ownerHelper
 
 
-ownerDecoderHelper : Int -> Decoder Owner
-ownerDecoderHelper n =
+ownerHelper : Int -> Decoder Owner
+ownerHelper n =
     case n of
         0 ->
             Decode.succeed Me
@@ -97,14 +91,14 @@ ownerDecoderHelper n =
             Decode.fail "Incorrect owner id"
 
 
-buildingTypeDecoder : Decoder BuildingType
-buildingTypeDecoder =
+buildingType : Decoder BuildingType
+buildingType =
     Decode.int
-        |> Decode.andThen buildingTypeDecoderHelper
+        |> Decode.andThen buildingTypeHelper
 
 
-buildingTypeDecoderHelper : Int -> Decoder BuildingType
-buildingTypeDecoderHelper n =
+buildingTypeHelper : Int -> Decoder BuildingType
+buildingTypeHelper n =
     case n of
         0 ->
             Decode.succeed Hq
@@ -119,10 +113,10 @@ buildingTypeDecoderHelper n =
             Decode.fail "Incorrect buildingType id"
 
 
-unitDecoder : Decoder Unit
-unitDecoder =
+unit : Decoder Unit
+unit =
     Decode.map5 Unit
-        (Decode.field "owner" ownerDecoder)
+        (Decode.field "owner" owner)
         (Decode.field "unitId" Decode.int)
         (Decode.field "level" Decode.int)
         (Decode.field "x" Decode.int)
