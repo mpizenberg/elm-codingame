@@ -55,8 +55,8 @@ update data state =
                 ( newState, theOrders, log ) =
                     Game.strategy gameData state
             in
-            -- ( state, Cmd.batch [ order theOrders ] )
-            ( newState, Cmd.batch [ debug log, order theOrders ] )
+            -- ( newState, Cmd.batch [ debug log, order theOrders ] )
+            ( state, order theOrders )
 
         Err error ->
             ( state, debug (Decode.errorToString error) )
