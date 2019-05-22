@@ -8,29 +8,29 @@ import Dict exposing (Dict)
 
 compute : Map -> Dict ( Int, Int ) Cell
 compute map =
-    helperFrontier map 0 0 Dict.empty
+    helper map 0 0 Dict.empty
 
 
-helperFrontier : Map -> Int -> Int -> Dict ( Int, Int ) Cell -> Dict ( Int, Int ) Cell
-helperFrontier map x y cells =
+helper : Map -> Int -> Int -> Dict ( Int, Int ) Cell -> Dict ( Int, Int ) Cell
+helper map x y cells =
     case ( x, y ) of
         ( _, 12 ) ->
             cells
 
         ( 12, _ ) ->
-            helperFrontier map 0 (y + 1) cells
+            helper map 0 (y + 1) cells
 
         _ ->
-            case isAtMyFrontier x y map of
+            case contains x y map of
                 Just cell ->
-                    helperFrontier map (x + 1) y (Dict.insert ( x, y ) cell cells)
+                    helper map (x + 1) y (Dict.insert ( x, y ) cell cells)
 
                 Nothing ->
-                    helperFrontier map (x + 1) y cells
+                    helper map (x + 1) y cells
 
 
-isAtMyFrontier : Int -> Int -> Map -> Maybe Cell
-isAtMyFrontier x y map =
+contains : Int -> Int -> Map -> Maybe Cell
+contains x y map =
     case Map.get x y map of
         Nothing ->
             Nothing
