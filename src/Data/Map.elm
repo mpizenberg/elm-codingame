@@ -1,6 +1,5 @@
 module Data.Map exposing
     ( Map
-    , cellsLineString
     , get
     , isActiveMe
     , toString
@@ -62,12 +61,12 @@ get x y map =
 toString : Map -> String
 toString map =
     Array.toList map
-        |> List.map cellsLineString
+        |> List.map lineAsString
         |> String.join "\n"
 
 
-cellsLineString : Array Cell -> String
-cellsLineString cells =
+lineAsString : Array Cell -> String
+lineAsString cells =
     Array.map Cell.toChar cells
         |> Array.toList
         |> String.fromList
