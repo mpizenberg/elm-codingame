@@ -62,59 +62,89 @@ movementsHelper enemyHqPos unit ( terrain, movAcc ) =
 
 canMove : Unit -> Int -> Int -> Terrain -> Maybe Movement
 canMove unit x y terrain =
+    if isEnemyProtected x y terrain then
+        Nothing
+
+    else
+        case getCell x y terrain of
+            Just Neutral ->
+                Just (Movement unit.id x y CaptureNeutral)
+
+            Just (Active Me ActiveNothing) ->
+                Just (Movement unit.id x y NoCapture)
+
+            Just (Active Enemy ActiveNothing) ->
+                Just (Movement unit.id x y CaptureEnemy)
+
+            Just (Inactive Me InactiveNothing) ->
+                Just (Movement unit.id x y NoCapture)
+
+            Just (Inactive Enemy InactiveNothing) ->
+                Just (Movement unit.id x y CaptureEnemy)
+
+            Just (Active Me (ActiveBuilding building)) ->
+                case building.type_ of
+                    Tower ->
+                        Nothing
+
+                    _ ->
+                        Just (Movement unit.id x y NoCapture)
+
+            Just (Active Enemy (ActiveBuilding building)) ->
+                case building.type_ of
+                    Tower ->
+                        Nothing
+
+                    _ ->
+                        Just (Movement unit.id x y CaptureEnemy)
+
+            Just (Active Enemy (ActiveUnit enemyUnit)) ->
+                case ( enemyUnit.level, unit.level ) of
+                    ( _, 3 ) ->
+                        Just (Movement unit.id x y CaptureEnemy)
+
+                    ( 1, 2 ) ->
+                        Just (Movement unit.id x y CaptureEnemy)
+
+                    _ ->
+                        Nothing
+
+            Just (Inactive Enemy (InactiveBuilding building)) ->
+                case building.type_ of
+                    Tower ->
+                        Nothing
+
+                    _ ->
+                        Just (Movement unit.id x y CaptureEnemy)
+
+            _ ->
+                Nothing
+
+
+isEnemyProtected : Int -> Int -> Terrain -> Bool
+isEnemyProtected x y terrain =
     case getCell x y terrain of
-        Just Neutral ->
-            Just (Movement unit.id x y CaptureNeutral)
+        Just (Active Me _) ->
+            False
 
-        Just (Active Me ActiveNothing) ->
-            Just (Movement unit.id x y NoCapture)
-
-        Just (Active Enemy ActiveNothing) ->
-            Just (Movement unit.id x y CaptureEnemy)
-
-        Just (Inactive Me InactiveNothing) ->
-            Just (Movement unit.id x y NoCapture)
-
-        Just (Inactive Enemy InactiveNothing) ->
-            Just (Movement unit.id x y CaptureEnemy)
-
-        Just (Active Me (ActiveBuilding building)) ->
-            case building.type_ of
-                Tower ->
-                    Nothing
-
-                _ ->
-                    Just (Movement unit.id x y NoCapture)
-
-        Just (Active Enemy (ActiveBuilding building)) ->
-            case building.type_ of
-                Tower ->
-                    Nothing
-
-                _ ->
-                    Just (Movement unit.id x y CaptureEnemy)
-
-        Just (Active Enemy (ActiveUnit enemyUnit)) ->
-            case ( enemyUnit.level, unit.level ) of
-                ( _, 3 ) ->
-                    Just (Movement unit.id x y CaptureEnemy)
-
-                ( 1, 2 ) ->
-                    Just (Movement unit.id x y CaptureEnemy)
-
-                _ ->
-                    Nothing
-
-        Just (Inactive Enemy (InactiveBuilding building)) ->
-            case building.type_ of
-                Tower ->
-                    Nothing
-
-                _ ->
-                    Just (Movement unit.id x y CaptureEnemy)
+        Just (Inactive Me _) ->
+            False
 
         _ ->
-            Nothing
+            isEnemyTower x (y - 1) terrain
+                || isEnemyTower (x - 1) y terrain
+                || isEnemyTower (x + 1) y terrain
+                || isEnemyTower x (y + 1) terrain
+
+
+isEnemyTower : Int -> Int -> Terrain -> Bool
+isEnemyTower x y terrain =
+    case getCell x y terrain of
+        Just (Active Enemy (ActiveBuilding building)) ->
+            building.type_ == Tower
+
+        _ ->
+            False
 
 
 movementComparable : Position -> Movement -> ( Int, Int )
