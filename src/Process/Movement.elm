@@ -82,7 +82,7 @@ helper enemyHqPos unit ( map, movAcc ) =
 
 canMove : Unit -> Int -> Int -> Map -> Maybe Movement
 canMove unit x y map =
-    if Map.isEnemyProtected x y map then
+    if Map.isProtectedByEnemyTower x y map then
         Nothing
 
     else

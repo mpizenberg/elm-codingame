@@ -2,9 +2,9 @@ module Data.Map exposing
     ( Map
     , get
     , isActiveMe
-    , isEnemyProtected
     , isEnemyTower
     , isMyUnit
+    , isProtectedByEnemyTower
     , toString
     , update
     , updateBuilding
@@ -85,8 +85,8 @@ isMyUnit x y map =
             False
 
 
-isEnemyProtected : Int -> Int -> Map -> Bool
-isEnemyProtected x y map =
+isProtectedByEnemyTower : Int -> Int -> Map -> Bool
+isProtectedByEnemyTower x y map =
     case get x y map of
         Just (Cell.Active Me _) ->
             False
