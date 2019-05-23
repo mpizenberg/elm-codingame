@@ -17,7 +17,7 @@ type alias Training =
     { level : Int
     , x : Int
     , y : Int
-    , isMine : Bool
+    , cell : Cell
     }
 
 
@@ -88,39 +88,39 @@ compute map frontier =
 
 helper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
 helper map ( x, y ) cell acc =
-    case Map.get x y map of
-        Just Cell.Neutral ->
-            Training 1 x y False :: acc
+    case cell of
+        Cell.Neutral ->
+            Training 1 x y cell :: acc
 
-        Just (Cell.Active Enemy Cell.ActiveNothing) ->
-            Training 1 x y False :: acc
+        Cell.Active Enemy Cell.ActiveNothing ->
+            Training 1 x y cell :: acc
 
-        Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
+        Cell.Active Enemy (Cell.ActiveBuilding building) ->
             case building.type_ of
                 Tower ->
                     acc
 
                 _ ->
-                    Training 1 x y True :: acc
+                    Training 1 x y cell :: acc
 
-        Just (Cell.Active Enemy (Cell.ActiveUnit unit)) ->
+        Cell.Active Enemy (Cell.ActiveUnit unit) ->
             case unit.level of
                 1 ->
-                    Training 2 x y False :: acc
+                    Training 2 x y cell :: acc
 
                 _ ->
                     acc
 
-        Just (Cell.Inactive Enemy Cell.InactiveNothing) ->
-            Training 1 x y False :: acc
+        Cell.Inactive Enemy Cell.InactiveNothing ->
+            Training 1 x y cell :: acc
 
-        Just (Cell.Inactive _ (Cell.InactiveBuilding building)) ->
+        Cell.Inactive _ (Cell.InactiveBuilding building) ->
             case building.type_ of
                 Tower ->
                     acc
 
                 _ ->
-                    Training 1 x y True :: acc
+                    Training 1 x y cell :: acc
 
         _ ->
             acc
