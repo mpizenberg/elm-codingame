@@ -99,7 +99,12 @@ helper enemyHqPos unit ( map, movAcc ) =
 canMove : Unit -> Int -> Int -> Map -> Maybe Movement
 canMove unit x y map =
     if Map.isProtectedByEnemyTower x y map then
-        Nothing
+        case unit.level of
+            3 ->
+                Just (Movement unit.id x y CaptureEnemy)
+
+            _ ->
+                Nothing
 
     else
         case Map.get x y map of
@@ -127,8 +132,11 @@ canMove unit x y map =
                         Just (Movement unit.id x y NoCapture)
 
             Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
-                case building.type_ of
-                    Tower ->
+                case ( building.type_, unit.level ) of
+                    ( Tower, 1 ) ->
+                        Nothing
+
+                    ( Tower, 2 ) ->
                         Nothing
 
                     _ ->
@@ -146,8 +154,11 @@ canMove unit x y map =
                         Nothing
 
             Just (Cell.Inactive Enemy (Cell.InactiveBuilding building)) ->
-                case building.type_ of
-                    Tower ->
+                case ( building.type_, unit.level ) of
+                    ( Tower, 1 ) ->
+                        Nothing
+
+                    ( Tower, 2 ) ->
                         Nothing
 
                     _ ->
