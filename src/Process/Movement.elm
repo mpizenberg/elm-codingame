@@ -48,13 +48,13 @@ helper enemyHqPos unit ( map, movAcc ) =
             Movement unit.id unit.x unit.y NoCapture
 
         possibleMovements =
-            List.filterMap identity
-                [ Just noMovement
-                , canMove unit unit.x (unit.y - 1) map
-                , canMove unit (unit.x - 1) unit.y map
-                , canMove unit (unit.x + 1) unit.y map
-                , canMove unit unit.x (unit.y + 1) map
-                ]
+            noMovement
+                :: List.filterMap identity
+                    [ canMove unit unit.x (unit.y - 1) map
+                    , canMove unit (unit.x - 1) unit.y map
+                    , canMove unit (unit.x + 1) unit.y map
+                    , canMove unit unit.x (unit.y + 1) map
+                    ]
 
         sortedMovements =
             List.sortBy (comparable enemyHqPos) possibleMovements
