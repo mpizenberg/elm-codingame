@@ -1,6 +1,8 @@
 module Data.Map exposing
     ( Map
     , get
+    , getDistance1Cells
+    , getDistance2Cells
     , hasActiveFriendlyNeighbour
     , isActiveMe
     , isEnemyTower
@@ -29,6 +31,30 @@ get : Int -> Int -> Map -> Maybe Cell
 get x y map =
     Array.get y map
         |> Maybe.andThen (Array.get x)
+
+
+getDistance1Cells : Int -> Int -> Map -> List Cell
+getDistance1Cells x y map =
+    List.filterMap identity
+        [ get x (y - 1) map
+        , get (x - 1) y map
+        , get (x + 1) y map
+        , get x (y + 1) map
+        ]
+
+
+getDistance2Cells : Int -> Int -> Map -> List Cell
+getDistance2Cells x y map =
+    List.filterMap identity
+        [ get x (y - 2) map
+        , get (x - 1) (y - 1) map
+        , get (x + 1) (y - 1) map
+        , get (x - 2) y map
+        , get (x + 2) y map
+        , get (x - 1) (y + 1) map
+        , get (x + 1) (y + 1) map
+        , get x (y + 2) map
+        ]
 
 
 
@@ -68,10 +94,10 @@ update x y cell map =
 
 hasActiveFriendlyNeighbour : Int -> Int -> Map -> Bool
 hasActiveFriendlyNeighbour x y map =
-    isActiveMe (x - 1) y map
-        || isActiveMe x (y - 1) map
-        || isActiveMe x (y + 1) map
+    isActiveMe x (y - 1) map
+        || isActiveMe (x - 1) y map
         || isActiveMe (x + 1) y map
+        || isActiveMe x (y + 1) map
 
 
 isActiveMe : Int -> Int -> Map -> Bool

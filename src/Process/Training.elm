@@ -21,6 +21,11 @@ type alias Training =
     }
 
 
+type Strat
+    = Greedy
+    | Protective
+
+
 order : Training -> String
 order { level, x, y } =
     String.join " " ("TRAIN" :: List.map String.fromInt [ level, x, y ])
@@ -56,7 +61,8 @@ spend gold list acc =
 
 sort : Pos -> Map -> List Training -> List Training
 sort pos map =
-    List.sortBy (comparable pos map)
+    -- List.sortBy (comparable pos map)
+    List.sortBy (score map)
 
 
 comparable : Pos -> Map -> Training -> ( Int, Int, Int )
@@ -77,6 +83,82 @@ comparable { x, y } map t =
     ( nbFriendlyNeighbourUnits, distance, t.level )
 
 
+score : Map -> Training -> Int
+score map t =
+    let
+        targetScore =
+            baseScore t.cell
+
+        d1Score =
+            List.sum (List.map baseScore (Map.getDistance1Cells t.x t.y map))
+
+        d2Score =
+            List.sum (List.map baseScore (Map.getDistance2Cells t.x t.y map))
+
+        levelScore =
+            4 - t.level
+    in
+    -- Negate because of increase sort order
+    -levelScore * (8 * targetScore + 2 * d1Score + d2Score)
+
+
+baseScore : Cell -> Int
+baseScore cell =
+    case cell of
+        Cell.Neutral ->
+            1
+
+        Cell.Inactive Enemy Cell.InactiveNothing ->
+            2
+
+        Cell.Active Enemy Cell.ActiveNothing ->
+            2
+
+        Cell.Active Enemy (Cell.ActiveUnit _) ->
+            2
+
+        Cell.Inactive _ (Cell.InactiveBuilding building) ->
+            case building.type_ of
+                Tower ->
+                    4
+
+                Mine ->
+                    5
+
+                Hq ->
+                    10
+
+        Cell.Active Enemy (Cell.ActiveBuilding building) ->
+            case building.type_ of
+                Tower ->
+                    5
+
+                Mine ->
+                    6
+
+                Hq ->
+                    10
+
+        -- We want negative score on our Active units (not too crowded for expansion).
+        Cell.Active Me (Cell.ActiveUnit _) ->
+            -1
+
+        -- Actually if we are in risky area (confrontation), we should stay near friendly cells.
+        -- So maybe we could have a mode.
+        --     - greedy -> -1
+        --     - defensive -> +1
+        Cell.Active Me _ ->
+            -1
+
+        -- If we have Inactive cells in neighbourhood get them back ;)
+        Cell.Inactive Me Cell.InactiveNothing ->
+            4
+
+        -- Should not happen
+        Cell.Void ->
+            0
+
+
 
 -- Compute all possible trainings
 
@@ -89,6 +171,7 @@ compute map frontier =
 helper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
 helper map ( x, y ) cell acc =
     case cell of
+        -- On all other cells, we might want to train
         Cell.Neutral ->
             Training 1 x y cell :: acc
 
@@ -98,7 +181,7 @@ helper map ( x, y ) cell acc =
         Cell.Active Enemy (Cell.ActiveBuilding building) ->
             case building.type_ of
                 Tower ->
-                    acc
+                    Training 3 x y cell :: acc
 
                 _ ->
                     Training 1 x y cell :: acc
@@ -109,18 +192,21 @@ helper map ( x, y ) cell acc =
                     Training 2 x y cell :: acc
 
                 _ ->
-                    acc
+                    Training 3 x y cell :: acc
 
         Cell.Inactive Enemy Cell.InactiveNothing ->
             Training 1 x y cell :: acc
 
-        Cell.Inactive _ (Cell.InactiveBuilding building) ->
+        Cell.Inactive Enemy (Cell.InactiveBuilding building) ->
             case building.type_ of
                 Tower ->
-                    acc
+                    Training 3 x y cell :: acc
 
                 _ ->
                     Training 1 x y cell :: acc
 
+        -- We cannot train on void cells
+        -- We should not train on our active cells
+        -- There should not be inactive friendly cell
         _ ->
             acc
