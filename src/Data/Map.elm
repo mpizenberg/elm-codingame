@@ -2,6 +2,8 @@ module Data.Map exposing
     ( Map
     , get
     , isActiveMe
+    , isEnemyProtected
+    , isEnemyTower
     , isMyUnit
     , toString
     , update
@@ -16,6 +18,20 @@ import Data.Shared exposing (..)
 
 type alias Map =
     Array (Array Cell)
+
+
+
+-- Access a cell
+
+
+get : Int -> Int -> Map -> Maybe Cell
+get x y map =
+    Array.get y map
+        |> Maybe.andThen (Array.get x)
+
+
+
+-- Update the map
 
 
 updateUnit : Unit -> Map -> Map
@@ -43,6 +59,12 @@ update x y cell map =
             Array.set y (Array.set x cell line) map
 
 
+
+-- Check if a cell has some property.
+-- Functions of type :
+-- Int -> Int -> Map -> Bool
+
+
 isActiveMe : Int -> Int -> Map -> Bool
 isActiveMe x y map =
     case get x y map of
@@ -63,10 +85,34 @@ isMyUnit x y map =
             False
 
 
-get : Int -> Int -> Map -> Maybe Cell
-get x y map =
-    Array.get y map
-        |> Maybe.andThen (Array.get x)
+isEnemyProtected : Int -> Int -> Map -> Bool
+isEnemyProtected x y map =
+    case get x y map of
+        Just (Cell.Active Me _) ->
+            False
+
+        Just (Cell.Inactive Me _) ->
+            False
+
+        _ ->
+            isEnemyTower x (y - 1) map
+                || isEnemyTower (x - 1) y map
+                || isEnemyTower (x + 1) y map
+                || isEnemyTower x (y + 1) map
+
+
+isEnemyTower : Int -> Int -> Map -> Bool
+isEnemyTower x y map =
+    case get x y map of
+        Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
+            building.type_ == Tower
+
+        _ ->
+            False
+
+
+
+-- String visualization
 
 
 toString : Map -> String

@@ -82,7 +82,7 @@ helper enemyHqPos unit ( map, movAcc ) =
 
 canMove : Unit -> Int -> Int -> Map -> Maybe Movement
 canMove unit x y map =
-    if isEnemyProtected x y map then
+    if Map.isEnemyProtected x y map then
         Nothing
 
     else
@@ -139,32 +139,6 @@ canMove unit x y map =
 
             _ ->
                 Nothing
-
-
-isEnemyProtected : Int -> Int -> Map -> Bool
-isEnemyProtected x y map =
-    case Map.get x y map of
-        Just (Cell.Active Me _) ->
-            False
-
-        Just (Cell.Inactive Me _) ->
-            False
-
-        _ ->
-            isEnemyTower x (y - 1) map
-                || isEnemyTower (x - 1) y map
-                || isEnemyTower (x + 1) y map
-                || isEnemyTower x (y + 1) map
-
-
-isEnemyTower : Int -> Int -> Map -> Bool
-isEnemyTower x y map =
-    case Map.get x y map of
-        Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
-            building.type_ == Tower
-
-        _ ->
-            False
 
 
 comparable : Pos -> Movement -> ( Int, Int )
