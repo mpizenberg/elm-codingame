@@ -26,6 +26,11 @@ order { level, x, y } =
     String.join " " ("TRAIN" :: List.map String.fromInt [ level, x, y ])
 
 
+
+-- Spend all our money on trainings ;)
+-- Last argument is a loop accumulator, should be called with [] initially.
+
+
 spend : Int -> List Training -> List Training -> List Training
 spend gold list acc =
     case list of
@@ -42,6 +47,11 @@ spend gold list acc =
 
             else
                 acc
+
+
+
+-- Sort trainings in such a way that we prioritise
+-- the most cost-effective ones.
 
 
 sort : Pos -> Map -> List Training -> List Training
@@ -65,6 +75,10 @@ comparable { x, y } map t =
                     ]
     in
     ( nbFriendlyNeighbourUnits, distance, t.level )
+
+
+
+-- Compute all possible trainings
 
 
 compute : Map -> Dict ( Int, Int ) Cell -> List Training

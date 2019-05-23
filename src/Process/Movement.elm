@@ -31,14 +31,30 @@ order { id, x, y } =
 
 compute : Pos -> Map -> List Unit -> ( Map, List Movement )
 compute enemyHqPos map units =
+    List.foldl (helper enemyHqPos) ( map, [] ) (sort enemyHqPos units)
+
+
+
+-- Movements can prevent other units to move.
+-- Ideally, we should find an optimal list of compatible movements.
+-- In practice it is simpler to use a heuristic.
+-- For example, move first units in front.
+--
+-- We could also move first units that have less options.
+
+
+sort : Pos -> List Unit -> List Unit
+sort enemyHqPos units =
     let
         distance unit =
             abs (unit.x - enemyHqPos.x) + abs (unit.y - enemyHqPos.y)
-
-        sortedUnits =
-            List.sortBy distance units
     in
-    List.foldl (helper enemyHqPos) ( map, [] ) sortedUnits
+    List.sortBy distance units
+
+
+
+-- Movements are performed one after the over.
+-- It is thus important to keep track of our units on the Map after each move.
 
 
 helper : Pos -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )

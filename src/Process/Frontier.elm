@@ -11,6 +11,11 @@ compute map =
     helper map 0 0 Dict.empty
 
 
+
+-- TODO: Improve complexity
+-- Potentially we could iterate on only 1 cell over 2 (in a diagonal manner)
+
+
 helper : Map -> Int -> Int -> Dict ( Int, Int ) Cell -> Dict ( Int, Int ) Cell
 helper map x y cells =
     case ( x, y ) of
