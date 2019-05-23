@@ -1,6 +1,7 @@
 module Data.Map exposing
     ( Map
     , get
+    , hasActiveFriendlyNeighbour
     , isActiveMe
     , isEnemyTower
     , isMyUnit
@@ -63,6 +64,14 @@ update x y cell map =
 -- Check if a cell has some property.
 -- Functions of type :
 -- Int -> Int -> Map -> Bool
+
+
+hasActiveFriendlyNeighbour : Int -> Int -> Map -> Bool
+hasActiveFriendlyNeighbour x y map =
+    isActiveMe (x - 1) y map
+        || isActiveMe x (y - 1) map
+        || isActiveMe x (y + 1) map
+        || isActiveMe (x + 1) y map
 
 
 isActiveMe : Int -> Int -> Map -> Bool

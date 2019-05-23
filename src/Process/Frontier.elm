@@ -42,16 +42,8 @@ contains x y map =
             Nothing
 
         Just cell ->
-            if hasActiveFriendlyNeighbour x y map then
+            if Map.hasActiveFriendlyNeighbour x y map then
                 Just cell
 
             else
                 Nothing
-
-
-hasActiveFriendlyNeighbour : Int -> Int -> Map -> Bool
-hasActiveFriendlyNeighbour x y map =
-    Map.isActiveMe (x - 1) y map
-        || Map.isActiveMe (x + 1) y map
-        || Map.isActiveMe x (y - 1) map
-        || Map.isActiveMe x (y + 1) map
