@@ -170,43 +170,48 @@ compute map frontier =
 
 helper : Map -> ( Int, Int ) -> Cell -> List Training -> List Training
 helper map ( x, y ) cell acc =
-    case cell of
-        -- On all other cells, we might want to train
-        Cell.Neutral ->
-            Training 1 x y cell :: acc
+    -- This should be precomputed from the list of buildings instead
+    if Map.isProtectedByEnemyTower x y map then
+        Training 3 x y cell :: acc
 
-        Cell.Active Enemy Cell.ActiveNothing ->
-            Training 1 x y cell :: acc
+    else
+        case cell of
+            -- On all other cells, we might want to train
+            Cell.Neutral ->
+                Training 1 x y cell :: acc
 
-        Cell.Active Enemy (Cell.ActiveBuilding building) ->
-            case building.type_ of
-                Tower ->
-                    Training 3 x y cell :: acc
+            Cell.Active Enemy Cell.ActiveNothing ->
+                Training 1 x y cell :: acc
 
-                _ ->
-                    Training 1 x y cell :: acc
+            Cell.Active Enemy (Cell.ActiveBuilding building) ->
+                case building.type_ of
+                    Tower ->
+                        Training 3 x y cell :: acc
 
-        Cell.Active Enemy (Cell.ActiveUnit unit) ->
-            case unit.level of
-                1 ->
-                    Training 2 x y cell :: acc
+                    _ ->
+                        Training 1 x y cell :: acc
 
-                _ ->
-                    Training 3 x y cell :: acc
+            Cell.Active Enemy (Cell.ActiveUnit unit) ->
+                case unit.level of
+                    1 ->
+                        Training 2 x y cell :: acc
 
-        Cell.Inactive Enemy Cell.InactiveNothing ->
-            Training 1 x y cell :: acc
+                    _ ->
+                        Training 3 x y cell :: acc
 
-        Cell.Inactive Enemy (Cell.InactiveBuilding building) ->
-            case building.type_ of
-                Tower ->
-                    Training 3 x y cell :: acc
+            Cell.Inactive Enemy Cell.InactiveNothing ->
+                Training 1 x y cell :: acc
 
-                _ ->
-                    Training 1 x y cell :: acc
+            Cell.Inactive Enemy (Cell.InactiveBuilding building) ->
+                case building.type_ of
+                    Tower ->
+                        Training 3 x y cell :: acc
 
-        -- We cannot train on void cells
-        -- We should not train on our active cells
-        -- There should not be inactive friendly cell
-        _ ->
-            acc
+                    _ ->
+                        Training 1 x y cell :: acc
+
+            -- We cannot train on void cells
+            -- We should not train on our active cells
+            -- There should not be inactive friendly cell
+            _ ->
+                acc
