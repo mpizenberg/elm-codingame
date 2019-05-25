@@ -79,7 +79,7 @@ strategy data state =
             Training.compute newMap frontier
 
         sortedTraining =
-            Training.sort enemyHqPos newMap training
+            Training.sort costMap newMap training
 
         paidTraining =
             Training.spend data.gold sortedTraining []
@@ -99,12 +99,6 @@ strategy data state =
                 |> List.map (String.join " ")
                 |> String.join "\n"
 
-        trainingComparableString =
-            List.map (Training.comparable enemyHqPos newMap) training
-                |> List.map (\( a, b, c ) -> [ String.fromInt a, String.fromInt b, String.fromInt c ])
-                |> List.map (String.join " ")
-                |> String.join "\n"
-
         frontierPosString =
             Dict.keys frontier
                 |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
@@ -114,7 +108,6 @@ strategy data state =
             String.join "\n\n" <|
                 [ "Turn: " ++ String.fromInt data.turn
                 , "Training:\n" ++ trainingString
-                , "TrainingComparable:\n" ++ trainingComparableString
                 , "Frontier:\n" ++ frontierPosString
                 , "Cost map:\n" ++ CostMap.toString costMap
 

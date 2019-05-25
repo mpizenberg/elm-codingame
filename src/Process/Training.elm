@@ -1,6 +1,5 @@
 module Process.Training exposing
     ( Training
-    , comparable
     , compute
     , order
     , sort
@@ -8,6 +7,7 @@ module Process.Training exposing
     )
 
 import Data.Cell as Cell exposing (Cell)
+import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
 import Dict exposing (Dict)
@@ -59,32 +59,13 @@ spend gold list acc =
 -- the most cost-effective ones.
 
 
-sort : Pos -> Map -> List Training -> List Training
-sort pos map =
-    -- List.sortBy (comparable pos map)
-    List.sortBy (score map)
+sort : CostMap -> Map -> List Training -> List Training
+sort costMap map =
+    List.sortBy (score costMap map)
 
 
-comparable : Pos -> Map -> Training -> ( Int, Int, Int )
-comparable { x, y } map t =
-    let
-        distance =
-            abs (x - t.x) + abs (y - t.y)
-
-        nbFriendlyNeighbourUnits =
-            List.length <|
-                List.filter identity
-                    [ Map.isMyUnit t.x (t.y - 1) map
-                    , Map.isMyUnit (t.x - 1) t.y map
-                    , Map.isMyUnit (t.x + 1) t.y map
-                    , Map.isMyUnit t.x (t.y + 1) map
-                    ]
-    in
-    ( nbFriendlyNeighbourUnits, distance, t.level )
-
-
-score : Map -> Training -> Int
-score map t =
+score : CostMap -> Map -> Training -> Int
+score costMap map t =
     let
         targetScore =
             baseScore t.cell
@@ -97,9 +78,12 @@ score map t =
 
         levelScore =
             4 - t.level
+
+        distance =
+            CostMap.get t.x t.y costMap
     in
     -- Negate because of increase sort order
-    -levelScore * (8 * targetScore + 2 * d1Score + d2Score)
+    -levelScore * (8 * targetScore + 2 * d1Score + d2Score + distance)
 
 
 baseScore : Cell -> Int
