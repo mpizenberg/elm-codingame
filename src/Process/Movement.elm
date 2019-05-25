@@ -99,9 +99,16 @@ helper costMap unit ( map, movAcc ) =
 
 canMove : Unit -> Int -> Int -> Map -> Maybe Movement
 canMove unit x y map =
+    let
+        cell =
+            Map.get x y map
+    in
     if Map.isProtectedByEnemyTower x y map then
-        case unit.level of
-            3 ->
+        case ( unit.level, cell ) of
+            ( 3, Just Cell.Void ) ->
+                Nothing
+
+            ( 3, Just _ ) ->
                 Just (Movement unit.id x y CaptureEnemy)
 
             _ ->
