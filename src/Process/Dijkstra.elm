@@ -1,7 +1,8 @@
-module Process.Dijkstra exposing (CostMap, Node, allCosts, toString)
+module Process.Dijkstra exposing (allCosts)
 
 import Array exposing (Array)
 import Data.Cell as Cell exposing (Cell)
+import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
 import Dict exposing (Dict)
 import Set exposing (Set)
@@ -11,55 +12,14 @@ type alias Node =
     ( Int, Int )
 
 
-type alias CostMap =
-    Array (Array Int)
-
-
-update : Int -> Int -> Int -> CostMap -> CostMap
-update x y cost costMap =
-    case Array.get y costMap of
-        Nothing ->
-            costMap
-
-        Just line ->
-            Array.set y (Array.set x cost line) costMap
-
-
-
--- Convert to string for visualization
-
-
-toString : CostMap -> String
-toString costMap =
-    Array.map lineString costMap
-        |> Array.toList
-        |> String.join "\n"
-
-
-lineString : Array Int -> String
-lineString line =
-    Array.map costString line
-        |> Array.toList
-        |> String.join " , "
-
-
-costString : Int -> String
-costString n =
-    if n >= 0 && n < 10 then
-        String.cons ' ' (String.fromInt n)
-
-    else
-        String.fromInt n
-
-
 
 -- Compute all costs
 
 
-allCosts : Node -> Map -> CostMap
-allCosts node map =
+allCosts : ( Int, Int ) -> Map -> CostMap
+allCosts origin map =
     Array.repeat 12 (Array.repeat 12 -1)
-        |> costHelper (Dict.singleton node 0) Set.empty map
+        |> costHelper (Dict.singleton origin 0) Set.empty map
 
 
 
@@ -90,7 +50,7 @@ costHelper toProcess processed map costMap =
                 Dict.remove node toProcess
 
             newCostMap =
-                update x y cost costMap
+                CostMap.update x y cost costMap
 
             newProcessed =
                 Set.insert node processed

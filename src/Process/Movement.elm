@@ -6,6 +6,7 @@ module Process.Movement exposing
     )
 
 import Data.Cell as Cell exposing (Cell)
+import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
 
@@ -29,9 +30,9 @@ order { id, x, y } =
     String.join " " ("MOVE" :: List.map String.fromInt [ id, x, y ])
 
 
-compute : Pos -> Map -> List Unit -> ( Map, List Movement )
-compute enemyHqPos map units =
-    List.foldl (helper enemyHqPos) ( map, [] ) (sort enemyHqPos units)
+compute : CostMap -> Map -> List Unit -> ( Map, List Movement )
+compute costMap map units =
+    List.foldl (helper costMap) ( map, [] ) (sort costMap units)
 
 
 
@@ -43,11 +44,11 @@ compute enemyHqPos map units =
 -- We could also move first units that have less options.
 
 
-sort : Pos -> List Unit -> List Unit
-sort enemyHqPos units =
+sort : CostMap -> List Unit -> List Unit
+sort costMap units =
     let
         distance unit =
-            abs (unit.x - enemyHqPos.x) + abs (unit.y - enemyHqPos.y)
+            CostMap.get unit.x unit.y costMap
     in
     List.sortBy distance units
 
@@ -57,8 +58,8 @@ sort enemyHqPos units =
 -- It is thus important to keep track of our units on the Map after each move.
 
 
-helper : Pos -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
-helper enemyHqPos unit ( map, movAcc ) =
+helper : CostMap -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
+helper costMap unit ( map, movAcc ) =
     let
         noMovement =
             Movement unit.id unit.x unit.y NoCapture
@@ -73,7 +74,7 @@ helper enemyHqPos unit ( map, movAcc ) =
                     ]
 
         sortedMovements =
-            List.sortBy (comparable enemyHqPos) possibleMovements
+            List.sortBy (comparable costMap) possibleMovements
 
         chosenMovement =
             Maybe.withDefault noMovement (List.head sortedMovements)
@@ -168,8 +169,8 @@ canMove unit x y map =
                 Nothing
 
 
-comparable : Pos -> Movement -> ( Int, Int )
-comparable { x, y } m =
+comparable : CostMap -> Movement -> ( Int, Int )
+comparable costMap m =
     let
         captureScore =
             case m.capture of
@@ -185,6 +186,6 @@ comparable { x, y } m =
         -- TODO
         -- Should be better to go toward enemy territory
         distance =
-            abs (x - m.x) + abs (y - m.y)
+            CostMap.get m.x m.y costMap
     in
     ( captureScore, distance )

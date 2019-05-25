@@ -1,10 +1,11 @@
 module Game exposing (Data, State, strategy)
 
 import Data.Cell as Cell
+import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
 import Dict exposing (Dict)
-import Process.Dijkstra as Dijkstra exposing (CostMap)
+import Process.Dijkstra as Dijkstra
 import Process.Frontier as Frontier
 import Process.Movement as Movement
 import Process.Training as Training
@@ -65,7 +66,7 @@ strategy data state =
             List.filter (\u -> u.owner == Me) data.units
 
         ( newMap, movements ) =
-            Movement.compute enemyHqPos updatedMapWithBuildings myUnits
+            Movement.compute costMap updatedMapWithBuildings myUnits
 
         sortedMovements =
             List.reverse movements
@@ -115,7 +116,7 @@ strategy data state =
                 , "Training:\n" ++ trainingString
                 , "TrainingComparable:\n" ++ trainingComparableString
                 , "Frontier:\n" ++ frontierPosString
-                , "Cost map:\n" ++ Dijkstra.toString costMap
+                , "Cost map:\n" ++ CostMap.toString costMap
 
                 -- , "Map:\n" ++ Map.toString newMap
                 ]
