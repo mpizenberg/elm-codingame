@@ -38,10 +38,10 @@ init : Value -> ( Game.State, Cmd msg )
 init data =
     case Decode.decodeValue Decode.initData data of
         Ok minesSpots ->
-            ( Game.State minesSpots, debug "Init Done!" )
+            ( Game.State minesSpots Array.empty, debug "Init Done!" )
 
         Err error ->
-            ( Game.State [], debug (Decode.errorToString error) )
+            ( Game.State [] Array.empty, debug (Decode.errorToString error) )
 
 
 {-| Function called during game loop with game data of current turn.
@@ -55,8 +55,8 @@ update data state =
                 ( newState, theOrders, log ) =
                     Game.strategy gameData state
             in
-            -- ( newState, Cmd.batch [ debug log, order theOrders ] )
-            ( state, order theOrders )
+            -- ( state, order theOrders )
+            ( newState, Cmd.batch [ debug log, order theOrders ] )
 
         Err error ->
             ( state, debug (Decode.errorToString error) )

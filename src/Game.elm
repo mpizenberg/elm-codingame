@@ -4,6 +4,7 @@ import Data.Cell as Cell
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
 import Dict exposing (Dict)
+import Process.Dijkstra as Dijkstra exposing (CostMap)
 import Process.Frontier as Frontier
 import Process.Movement as Movement
 import Process.Training as Training
@@ -11,6 +12,7 @@ import Process.Training as Training
 
 type alias State =
     { minesSpots : List Pos
+    , costMap : CostMap
     }
 
 
@@ -36,6 +38,20 @@ strategy data state =
 
                 _ ->
                     { x = 0, y = 0 }
+
+        costMap =
+            if data.turn == 0 then
+                Dijkstra.allCosts ( enemyHqPos.x, enemyHqPos.y ) data.map
+
+            else
+                state.costMap
+
+        newState =
+            if data.turn == 0 then
+                { state | costMap = costMap }
+
+            else
+                state
 
         -- Update the Map with the positions of units and buildings
         updatedMapWithUnits =
@@ -99,8 +115,9 @@ strategy data state =
                 , "Training:\n" ++ trainingString
                 , "TrainingComparable:\n" ++ trainingComparableString
                 , "Frontier:\n" ++ frontierPosString
+                , "Cost map:\n" ++ Dijkstra.toString costMap
 
                 -- , "Map:\n" ++ Map.toString newMap
                 ]
     in
-    ( state, theOrders, log )
+    ( newState, theOrders, log )
