@@ -23,17 +23,26 @@ criticalMap map =
         map1 =
             allCosts ( 0, 0 ) map
 
-        map2 =
-            allCosts ( 0, 11 ) map
-    in
-    Array.initialize 12 <|
-        \y ->
+        symmetricCostMap =
             Array.initialize 12 <|
-                \x ->
-                    CostMap.get x y map1
-                        + CostMap.get (11 - x) (11 - y) map1
-                        + CostMap.get x y map2
-                        + CostMap.get (11 - x) (11 - y) map2
+                \y ->
+                    Array.initialize 12 <|
+                        \x -> CostMap.get x y map1 + CostMap.get (11 - x) (11 - y) map1
+
+        distanceBetweenHq =
+            CostMap.get 0 0 symmetricCostMap
+    in
+    symmetricCostMap
+        |> Array.map
+            (Array.map
+                (\c ->
+                    if c == distanceBetweenHq then
+                        1
+
+                    else
+                        -1
+                )
+            )
 
 
 

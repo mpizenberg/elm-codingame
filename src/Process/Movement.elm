@@ -30,9 +30,9 @@ order { id, x, y } =
     String.join " " ("MOVE" :: List.map String.fromInt [ id, x, y ])
 
 
-compute : CostMap -> Map -> List Unit -> ( Map, List Movement )
-compute costMap map units =
-    List.foldl (helper costMap) ( map, [] ) (sort costMap units)
+compute : CostMap -> CostMap -> Map -> List Unit -> ( Map, List Movement )
+compute costMap criticalMap map units =
+    List.foldl (helper costMap criticalMap) ( map, [] ) (sort costMap units)
 
 
 
@@ -58,8 +58,8 @@ sort costMap units =
 -- It is thus important to keep track of our units on the Map after each move.
 
 
-helper : CostMap -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
-helper costMap unit ( map, movAcc ) =
+helper : CostMap -> CostMap -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
+helper costMap criticalMap unit ( map, movAcc ) =
     let
         unitCell =
             Cell.Active Me (Cell.ActiveUnit unit)
@@ -77,7 +77,7 @@ helper costMap unit ( map, movAcc ) =
                     ]
 
         sortedMovements =
-            List.sortBy (score costMap map) possibleMovements
+            List.sortBy (score costMap criticalMap map) possibleMovements
 
         chosenMovement =
             Maybe.withDefault noMovement (List.head sortedMovements)
@@ -189,8 +189,8 @@ canMove unit x y map =
                         Just (Movement unit.id x y cell)
 
 
-score : CostMap -> Map -> Movement -> Int
-score costMap map m =
+score : CostMap -> CostMap -> Map -> Movement -> Int
+score costMap criticalMap map m =
     let
         targetScore =
             baseScore m.cell
@@ -203,9 +203,15 @@ score costMap map m =
 
         distance =
             CostMap.get m.x m.y costMap
+
+        critical =
+            CostMap.get m.x m.y criticalMap
+
+        spread =
+            abs (m.x - m.y)
     in
     -- Negate because of increase sort order
-    -(8 * targetScore + 2 * d1Score + d2Score + distance)
+    -(8 * targetScore + 2 * d1Score + d2Score + distance + critical - spread)
 
 
 baseScore : Cell -> Int

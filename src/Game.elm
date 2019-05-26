@@ -83,7 +83,7 @@ strategy data state =
             List.filter (\u -> u.owner == Me) data.units
 
         ( newMap, movements ) =
-            Movement.compute costMap updatedMapWithBuildings myUnits
+            Movement.compute costMap criticalMap updatedMapWithBuildings myUnits
 
         sortedMovements =
             List.reverse movements
