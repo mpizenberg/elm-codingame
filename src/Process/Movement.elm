@@ -193,16 +193,16 @@ score : CostMap -> CostMap -> Map -> Movement -> Int
 score costMap criticalMap map m =
     let
         targetScore =
-            baseScore m.cell
+            8 * baseScore m.cell
 
         d1Score =
-            List.sum (List.map baseScore (Map.getDistance1Cells m.x m.y map))
+            2 * List.sum (List.map baseScore (Map.getDistance1Cells m.x m.y map))
 
         d2Score =
             List.sum (List.map baseScore (Map.getDistance2Cells m.x m.y map))
 
         distance =
-            CostMap.get m.x m.y costMap
+            2 * CostMap.get m.x m.y costMap
 
         critical =
             2 * CostMap.get m.x m.y criticalMap
@@ -211,7 +211,7 @@ score costMap criticalMap map m =
             2 * abs (m.x - m.y)
     in
     -- Negate because of increase sort order
-    -(8 * targetScore + 2 * d1Score + d2Score - distance + critical - spread)
+    -(targetScore + d1Score + d2Score - distance + critical - spread)
 
 
 baseScore : Cell -> Int

@@ -135,13 +135,13 @@ baseScoreD2 cell =
                     -1
 
                 2 ->
-                    4
+                    5
 
                 _ ->
-                    3
+                    4
 
         Cell.Active Enemy _ ->
-            2
+            3
 
         Cell.Inactive _ _ ->
             2

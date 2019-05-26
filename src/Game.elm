@@ -106,7 +106,7 @@ strategy data state =
                         ( [], data.gold )
 
                     towerScore :: _ ->
-                        if data.gold >= 15 && data.turn >= 6 then
+                        if data.gold >= 15 && data.turn >= 6 && towerScore.towerScore < -14 then
                             ( [ towerScore ], data.gold - 15 )
 
                         else

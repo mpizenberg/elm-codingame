@@ -104,8 +104,16 @@ baseScore cell =
         Cell.Active Enemy Cell.ActiveNothing ->
             2
 
-        Cell.Active Enemy (Cell.ActiveUnit _) ->
-            2
+        Cell.Active Enemy (Cell.ActiveUnit unit) ->
+            case unit.level of
+                3 ->
+                    5
+
+                2 ->
+                    4
+
+                _ ->
+                    3
 
         Cell.Inactive _ (Cell.InactiveBuilding building) ->
             case building.type_ of
