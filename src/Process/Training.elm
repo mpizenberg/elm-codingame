@@ -59,13 +59,13 @@ spend gold list acc =
 -- the most cost-effective ones.
 
 
-sort : CostMap -> Map -> List Training -> List Training
-sort costMap map =
-    List.sortBy (score costMap map)
+sort : CostMap -> CostMap -> Map -> List Training -> List Training
+sort costMap criticalMap map =
+    List.sortBy (score costMap criticalMap map)
 
 
-score : CostMap -> Map -> Training -> Int
-score costMap map t =
+score : CostMap -> CostMap -> Map -> Training -> Int
+score costMap criticalMap map t =
     let
         targetScore =
             baseScore t.cell
@@ -81,9 +81,15 @@ score costMap map t =
 
         distance =
             CostMap.get t.x t.y costMap
+
+        critical =
+            2 * CostMap.get t.x t.y criticalMap
+
+        spread =
+            2 * abs (t.x - t.y)
     in
     -- Negate because of increase sort order
-    -levelScore * (8 * targetScore + 2 * d1Score + d2Score + distance)
+    -levelScore * (8 * targetScore + 2 * d1Score + d2Score + distance + critical - spread)
 
 
 baseScore : Cell -> Int

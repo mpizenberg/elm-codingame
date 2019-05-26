@@ -102,7 +102,7 @@ strategy data state =
                 Training.compute newMap frontier
 
             sortedTraining =
-                Training.sort costMap newMap training
+                Training.sort costMap criticalMap newMap training
 
             paidTraining =
                 Training.spend data.gold sortedTraining []

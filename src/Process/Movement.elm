@@ -127,19 +127,19 @@ canMove unit x y map =
                     -- My building
                     Cell.Active Me (Cell.ActiveBuilding building) ->
                         case building.type_ of
-                            Tower ->
-                                Nothing
+                            Mine ->
+                                Just (Movement unit.id x y cell)
 
                             _ ->
-                                Just (Movement unit.id x y cell)
+                                Nothing
 
                     Cell.Inactive Me (Cell.InactiveBuilding building) ->
                         case building.type_ of
-                            Tower ->
-                                Nothing
+                            Mine ->
+                                Just (Movement unit.id x y cell)
 
                             _ ->
-                                Just (Movement unit.id x y cell)
+                                Nothing
 
                     -- Enemy building
                     Cell.Inactive Enemy (Cell.InactiveBuilding building) ->
@@ -205,10 +205,10 @@ score costMap criticalMap map m =
             CostMap.get m.x m.y costMap
 
         critical =
-            CostMap.get m.x m.y criticalMap
+            2 * CostMap.get m.x m.y criticalMap
 
         spread =
-            abs (m.x - m.y)
+            2 * abs (m.x - m.y)
     in
     -- Negate because of increase sort order
     -(8 * targetScore + 2 * d1Score + d2Score + distance + critical - spread)
