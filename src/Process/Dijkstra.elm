@@ -1,4 +1,4 @@
-module Process.Dijkstra exposing (Step, allCosts, spear)
+module Process.Dijkstra exposing (Step, allCosts, criticalMap, spear)
 
 import Array exposing (Array)
 import Data.Cell as Cell exposing (Cell)
@@ -11,6 +11,29 @@ import Set exposing (Set)
 
 type alias Node =
     ( Int, Int )
+
+
+
+-- Try evaluate critical cells in the map
+
+
+criticalMap : Map -> CostMap
+criticalMap map =
+    let
+        map1 =
+            allCosts ( 0, 0 ) map
+
+        map2 =
+            allCosts ( 0, 11 ) map
+    in
+    Array.initialize 12 <|
+        \y ->
+            Array.initialize 12 <|
+                \x ->
+                    CostMap.get x y map1
+                        + CostMap.get (11 - x) (11 - y) map1
+                        + CostMap.get x y map2
+                        + CostMap.get (11 - x) (11 - y) map2
 
 
 

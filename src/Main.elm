@@ -38,10 +38,10 @@ init : Value -> ( Game.State, Cmd msg )
 init data =
     case Decode.decodeValue Decode.initData data of
         Ok minesSpots ->
-            ( Game.State minesSpots Array.empty, debug "Init Done!" )
+            ( Game.initialState minesSpots, debug "Init Done!" )
 
         Err error ->
-            ( Game.State [] Array.empty, debug (Decode.errorToString error) )
+            ( Game.initialState [], debug (Decode.errorToString error) )
 
 
 {-| Function called during game loop with game data of current turn.

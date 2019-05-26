@@ -1,5 +1,6 @@
-module Game exposing (Data, State, strategy)
+module Game exposing (Data, State, initialState, strategy)
 
+import Array
 import Data.Cell as Cell
 import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
@@ -14,6 +15,15 @@ import Process.Training as Training exposing (Training)
 type alias State =
     { minesSpots : List Pos
     , costMap : CostMap
+    , criticalMap : CostMap
+    }
+
+
+initialState : List Pos -> State
+initialState minesSpots =
+    { minesSpots = minesSpots
+    , costMap = Array.empty
+    , criticalMap = Array.empty
     }
 
 
@@ -47,9 +57,16 @@ strategy data state =
             else
                 state.costMap
 
+        criticalMap =
+            if data.turn == 0 then
+                Dijkstra.criticalMap data.map
+
+            else
+                state.criticalMap
+
         newState =
             if data.turn == 0 then
-                { state | costMap = costMap }
+                { state | costMap = costMap, criticalMap = criticalMap }
 
             else
                 state
@@ -117,6 +134,8 @@ strategy data state =
                     -- , "Training:\n" ++ trainingString
                     -- , "Frontier:\n" ++ frontierPosString
                     -- , "Cost map:\n" ++ CostMap.toString costMap
+                    , "Critical map:\n" ++ CostMap.toString criticalMap
+
                     -- , "Map:\n" ++ Map.toString newMap
                     ]
         in
