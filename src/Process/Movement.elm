@@ -211,7 +211,7 @@ score costMap criticalMap map m =
             2 * abs (m.x - m.y)
     in
     -- Negate because of increase sort order
-    -(8 * targetScore + 2 * d1Score + d2Score + distance + critical - spread)
+    -(8 * targetScore + 2 * d1Score + d2Score - distance + critical - spread)
 
 
 baseScore : Cell -> Int
