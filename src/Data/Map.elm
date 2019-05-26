@@ -1,5 +1,6 @@
 module Data.Map exposing
     ( Map
+    , foldl
     , get
     , getDistance1Cells
     , getDistance2Cells
@@ -84,6 +85,27 @@ update x y cell map =
 
         Just line ->
             Array.set y (Array.set x cell line) map
+
+
+
+-- Fold
+
+
+foldl : (Int -> Int -> Cell -> a -> a) -> a -> Map -> a
+foldl f initialValue map =
+    Array.foldl (foldLine f) ( 0, initialValue ) map
+        |> Tuple.second
+
+
+foldLine : (Int -> Int -> Cell -> a -> a) -> Array Cell -> ( Int, a ) -> ( Int, a )
+foldLine f line ( y, a ) =
+    Array.foldl (foldCell f) ( 0, y, a ) line
+        |> (\( x, _, newA ) -> ( y + 1, newA ))
+
+
+foldCell : (Int -> Int -> Cell -> a -> a) -> Cell -> ( Int, Int, a ) -> ( Int, Int, a )
+foldCell f cell ( x, y, a ) =
+    ( x + 1, y, f x y cell a )
 
 
 

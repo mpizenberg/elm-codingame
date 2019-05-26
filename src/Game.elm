@@ -9,11 +9,13 @@ import Dict exposing (Dict)
 import Process.Dijkstra as Dijkstra
 import Process.Frontier as Frontier
 import Process.Movement as Movement exposing (Movement)
+import Process.Tower as Tower
 import Process.Training as Training exposing (Training)
+import Set exposing (Set)
 
 
 type alias State =
-    { minesSpots : List Pos
+    { minesSpots : Set Node
     , costMap : CostMap
     , criticalMap : CostMap
     }
@@ -21,7 +23,7 @@ type alias State =
 
 initialState : List Pos -> State
 initialState minesSpots =
-    { minesSpots = minesSpots
+    { minesSpots = Set.fromList (List.map (\p -> ( p.x, p.y )) minesSpots)
     , costMap = Array.empty
     , criticalMap = Array.empty
     }
@@ -94,24 +96,44 @@ strategy data state =
     in
     if List.isEmpty spear then
         let
+            -- Compute tower scores
+            towers =
+                Tower.sortedList state.minesSpots costMap criticalMap newMap
+
+            ( towersToBuild, newGold ) =
+                case towers of
+                    [] ->
+                        ( [], data.gold )
+
+                    towerScore :: _ ->
+                        if data.gold >= 15 && data.turn >= 6 then
+                            ( [ towerScore ], data.gold - 15 )
+
+                        else
+                            ( [], data.gold )
+
+            mapWithTowers =
+                List.foldl (\t -> Map.updateBuilding (Building Me Tower t.x t.y)) newMap towersToBuild
+
             -- Compute my trainings
             frontier =
-                Frontier.compute newMap
+                Frontier.compute mapWithTowers
 
             training =
-                Training.compute newMap frontier
+                Training.compute mapWithTowers frontier
 
             sortedTraining =
-                Training.sort costMap criticalMap newMap training
+                Training.sort costMap criticalMap mapWithTowers training
 
             paidTraining =
-                Training.spend data.gold sortedTraining []
+                Training.spend newGold sortedTraining []
 
             -- Build the orders from movements and training
             theOrders =
                 String.join ";" <|
                     List.concat
                         [ List.map Movement.order sortedMovements
+                        , List.map Tower.order towersToBuild
                         , List.map Training.order paidTraining
                         , [ "WAIT" ]
                         ]
@@ -127,16 +149,20 @@ strategy data state =
                     |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
                     |> String.join "\n"
 
+            towersString =
+                List.map Tower.toString towers
+                    |> String.join "\n"
+
             log =
                 String.join "\n\n" <|
                     [ "Turn: " ++ String.fromInt data.turn
+                    , "Towers:\n" ++ towersString
 
                     -- , "Training:\n" ++ trainingString
                     -- , "Frontier:\n" ++ frontierPosString
                     -- , "Cost map:\n" ++ CostMap.toString costMap
-                    , "Critical map:\n" ++ CostMap.toString criticalMap
-
-                    -- , "Map:\n" ++ Map.toString newMap
+                    -- , "Critical map:\n" ++ CostMap.toString criticalMap
+                    -- , "Map:\n" ++ Map.toString mapWithTowers
                     ]
         in
         ( newState, theOrders, log )

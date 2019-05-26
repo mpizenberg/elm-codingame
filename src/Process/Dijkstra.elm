@@ -9,10 +9,6 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 
 
-type alias Node =
-    ( Int, Int )
-
-
 
 -- Try evaluate critical cells in the map
 

@@ -1,6 +1,7 @@
 module Data.Shared exposing
     ( Building
     , BuildingType(..)
+    , Node
     , Owner(..)
     , Pos
     , Unit
@@ -39,3 +40,7 @@ type alias Pos =
     { x : Int
     , y : Int
     }
+
+
+type alias Node =
+    ( Int, Int )
