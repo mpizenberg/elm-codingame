@@ -15,7 +15,7 @@ type alias Movement =
     { id : Int
     , x : Int
     , y : Int
-    , capture : Capture
+    , cell : Cell
     }
 
 
@@ -54,15 +54,18 @@ sort costMap units =
 
 
 
--- Movements are performed one after the over.
+-- Movements are performed one after the other.
 -- It is thus important to keep track of our units on the Map after each move.
 
 
 helper : CostMap -> Unit -> ( Map, List Movement ) -> ( Map, List Movement )
 helper costMap unit ( map, movAcc ) =
     let
+        unitCell =
+            Cell.Active Me (Cell.ActiveUnit unit)
+
         noMovement =
-            Movement unit.id unit.x unit.y NoCapture
+            Movement unit.id unit.x unit.y unitCell
 
         possibleMovements =
             noMovement
@@ -74,7 +77,7 @@ helper costMap unit ( map, movAcc ) =
                     ]
 
         sortedMovements =
-            List.sortBy (comparable costMap) possibleMovements
+            List.sortBy (score costMap map) possibleMovements
 
         chosenMovement =
             Maybe.withDefault noMovement (List.head sortedMovements)
@@ -100,99 +103,163 @@ helper costMap unit ( map, movAcc ) =
 canMove : Unit -> Int -> Int -> Map -> Maybe Movement
 canMove unit x y map =
     let
-        cell =
+        maybeCell =
             Map.get x y map
     in
     if Map.isProtectedByEnemyTower x y map then
-        case ( unit.level, cell ) of
+        case ( unit.level, maybeCell ) of
             ( 3, Just Cell.Void ) ->
                 Nothing
 
-            ( 3, Just _ ) ->
-                Just (Movement unit.id x y CaptureEnemy)
+            ( 3, Just cell ) ->
+                Just (Movement unit.id x y cell)
 
             _ ->
                 Nothing
 
     else
-        case Map.get x y map of
-            Just Cell.Neutral ->
-                Just (Movement unit.id x y CaptureNeutral)
-
-            Just (Cell.Active Me Cell.ActiveNothing) ->
-                Just (Movement unit.id x y NoCapture)
-
-            Just (Cell.Active Enemy Cell.ActiveNothing) ->
-                Just (Movement unit.id x y CaptureEnemy)
-
-            Just (Cell.Inactive Me Cell.InactiveNothing) ->
-                Just (Movement unit.id x y NoCapture)
-
-            Just (Cell.Inactive Enemy Cell.InactiveNothing) ->
-                Just (Movement unit.id x y CaptureEnemy)
-
-            Just (Cell.Active Me (Cell.ActiveBuilding building)) ->
-                case building.type_ of
-                    Tower ->
-                        Nothing
-
-                    _ ->
-                        Just (Movement unit.id x y NoCapture)
-
-            Just (Cell.Active Enemy (Cell.ActiveBuilding building)) ->
-                case ( building.type_, unit.level ) of
-                    ( Tower, 1 ) ->
-                        Nothing
-
-                    ( Tower, 2 ) ->
-                        Nothing
-
-                    _ ->
-                        Just (Movement unit.id x y CaptureEnemy)
-
-            Just (Cell.Active Enemy (Cell.ActiveUnit enemyUnit)) ->
-                case ( enemyUnit.level, unit.level ) of
-                    ( _, 3 ) ->
-                        Just (Movement unit.id x y CaptureEnemy)
-
-                    ( 1, 2 ) ->
-                        Just (Movement unit.id x y CaptureEnemy)
-
-                    _ ->
-                        Nothing
-
-            Just (Cell.Inactive Enemy (Cell.InactiveBuilding building)) ->
-                case ( building.type_, unit.level ) of
-                    ( Tower, 1 ) ->
-                        Nothing
-
-                    ( Tower, 2 ) ->
-                        Nothing
-
-                    _ ->
-                        Just (Movement unit.id x y CaptureEnemy)
-
-            _ ->
+        case maybeCell of
+            Nothing ->
                 Nothing
 
+            Just cell ->
+                case cell of
+                    -- My building
+                    Cell.Active Me (Cell.ActiveBuilding building) ->
+                        case building.type_ of
+                            Tower ->
+                                Nothing
 
-comparable : CostMap -> Movement -> ( Int, Int )
-comparable costMap m =
+                            _ ->
+                                Just (Movement unit.id x y cell)
+
+                    Cell.Inactive Me (Cell.InactiveBuilding building) ->
+                        case building.type_ of
+                            Tower ->
+                                Nothing
+
+                            _ ->
+                                Just (Movement unit.id x y cell)
+
+                    -- Enemy building
+                    Cell.Inactive Enemy (Cell.InactiveBuilding building) ->
+                        case ( building.type_, unit.level ) of
+                            ( Tower, 1 ) ->
+                                Nothing
+
+                            ( Tower, 2 ) ->
+                                Nothing
+
+                            _ ->
+                                Just (Movement unit.id x y cell)
+
+                    Cell.Active Enemy (Cell.ActiveBuilding building) ->
+                        case ( building.type_, unit.level ) of
+                            ( Tower, 1 ) ->
+                                Nothing
+
+                            ( Tower, 2 ) ->
+                                Nothing
+
+                            _ ->
+                                Just (Movement unit.id x y cell)
+
+                    -- Enemy unit
+                    Cell.Active Enemy (Cell.ActiveUnit enemyUnit) ->
+                        case ( enemyUnit.level, unit.level ) of
+                            ( _, 3 ) ->
+                                Just (Movement unit.id x y cell)
+
+                            ( 1, 2 ) ->
+                                Just (Movement unit.id x y cell)
+
+                            _ ->
+                                Nothing
+
+                    -- My unit
+                    Cell.Active Me (Cell.ActiveUnit _) ->
+                        Nothing
+
+                    -- Void cannot
+                    Cell.Void ->
+                        Nothing
+
+                    -- Neutral and empty can
+                    _ ->
+                        Just (Movement unit.id x y cell)
+
+
+score : CostMap -> Map -> Movement -> Int
+score costMap map m =
     let
-        captureScore =
-            case m.capture of
-                CaptureEnemy ->
-                    0
+        targetScore =
+            baseScore m.cell
 
-                CaptureNeutral ->
-                    1
+        d1Score =
+            List.sum (List.map baseScore (Map.getDistance1Cells m.x m.y map))
 
-                NoCapture ->
-                    2
+        d2Score =
+            List.sum (List.map baseScore (Map.getDistance2Cells m.x m.y map))
 
-        -- TODO
-        -- Should be better to go toward enemy territory
         distance =
             CostMap.get m.x m.y costMap
     in
-    ( captureScore, distance )
+    -- Negate because of increase sort order
+    -(8 * targetScore + 2 * d1Score + d2Score + distance)
+
+
+baseScore : Cell -> Int
+baseScore cell =
+    case cell of
+        Cell.Neutral ->
+            1
+
+        Cell.Inactive Enemy Cell.InactiveNothing ->
+            2
+
+        Cell.Active Enemy Cell.ActiveNothing ->
+            2
+
+        Cell.Active Enemy (Cell.ActiveUnit _) ->
+            2
+
+        Cell.Inactive _ (Cell.InactiveBuilding building) ->
+            case building.type_ of
+                Tower ->
+                    4
+
+                Mine ->
+                    5
+
+                Hq ->
+                    10
+
+        Cell.Active Enemy (Cell.ActiveBuilding building) ->
+            case building.type_ of
+                Tower ->
+                    5
+
+                Mine ->
+                    6
+
+                Hq ->
+                    10
+
+        -- We want negative score on our Active units (not too crowded for expansion).
+        Cell.Active Me (Cell.ActiveUnit _) ->
+            -1
+
+        -- Actually if we are in risky area (confrontation), we should stay near friendly cells.
+        -- So maybe we could have a mode.
+        --     - greedy -> -1
+        --     - defensive -> +1
+        Cell.Active Me _ ->
+            -1
+
+        -- If we have Inactive cells in neighbourhood get them back ;)
+        Cell.Inactive Me Cell.InactiveNothing ->
+            4
+
+        -- Should not happen
+        Cell.Void ->
+            0
