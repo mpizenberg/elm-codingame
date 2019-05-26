@@ -7,8 +7,8 @@ import Data.Shared exposing (..)
 import Dict exposing (Dict)
 import Process.Dijkstra as Dijkstra
 import Process.Frontier as Frontier
-import Process.Movement as Movement
-import Process.Training as Training
+import Process.Movement as Movement exposing (Movement)
+import Process.Training as Training exposing (Training)
 
 
 type alias State =
@@ -71,47 +71,75 @@ strategy data state =
         sortedMovements =
             List.reverse movements
 
-        -- Compute my trainings
-        frontier =
-            Frontier.compute newMap
-
-        training =
-            Training.compute newMap frontier
-
-        sortedTraining =
-            Training.sort costMap newMap training
-
-        paidTraining =
-            Training.spend data.gold sortedTraining []
-
-        -- Build the orders from movements and training
-        theOrders =
-            String.join ";" <|
-                List.concat
-                    [ List.map Movement.order sortedMovements
-                    , List.map Training.order paidTraining
-                    , [ "WAIT" ]
-                    ]
-
-        -- Some log info
-        trainingString =
-            List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
-                |> List.map (String.join " ")
-                |> String.join "\n"
-
-        frontierPosString =
-            Dict.keys frontier
-                |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
-                |> String.join "\n"
-
-        log =
-            String.join "\n\n" <|
-                [ "Turn: " ++ String.fromInt data.turn
-                , "Training:\n" ++ trainingString
-                , "Frontier:\n" ++ frontierPosString
-                , "Cost map:\n" ++ CostMap.toString costMap
-
-                -- , "Map:\n" ++ Map.toString newMap
-                ]
+        -- Evaluate spearToHq
+        spear =
+            Dijkstra.spear data.gold ( enemyHqPos.x, enemyHqPos.y ) newMap
     in
-    ( newState, theOrders, log )
+    if List.isEmpty spear then
+        let
+            -- Compute my trainings
+            frontier =
+                Frontier.compute newMap
+
+            training =
+                Training.compute newMap frontier
+
+            sortedTraining =
+                Training.sort costMap newMap training
+
+            paidTraining =
+                Training.spend data.gold sortedTraining []
+
+            -- Build the orders from movements and training
+            theOrders =
+                String.join ";" <|
+                    List.concat
+                        [ List.map Movement.order sortedMovements
+                        , List.map Training.order paidTraining
+                        , [ "WAIT" ]
+                        ]
+
+            -- Some log info
+            trainingString =
+                List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
+                    |> List.map (String.join " ")
+                    |> String.join "\n"
+
+            frontierPosString =
+                Dict.keys frontier
+                    |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
+                    |> String.join "\n"
+
+            log =
+                String.join "\n\n" <|
+                    [ "Turn: " ++ String.fromInt data.turn
+
+                    -- , "Training:\n" ++ trainingString
+                    -- , "Frontier:\n" ++ frontierPosString
+                    -- , "Cost map:\n" ++ CostMap.toString costMap
+                    -- , "Map:\n" ++ Map.toString newMap
+                    ]
+        in
+        ( newState, theOrders, log )
+
+    else
+        let
+            theOrders =
+                String.join ";" <|
+                    List.concat
+                        [ List.map Movement.order sortedMovements
+                        , List.map Training.order spear
+                        , [ "MSG Speared!" ]
+                        ]
+
+            spearString =
+                List.map (\{ x, y } -> String.fromInt x ++ ", " ++ String.fromInt y) spear
+                    |> String.join "\n"
+
+            log =
+                String.join "\n\n" <|
+                    [ "Turn: " ++ String.fromInt data.turn
+                    , "Spear: " ++ spearString
+                    ]
+        in
+        ( newState, theOrders, log )

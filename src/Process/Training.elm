@@ -26,7 +26,7 @@ type Strat
     | Protective
 
 
-order : Training -> String
+order : { a | level : Int, x : Int, y : Int } -> String
 order { level, x, y } =
     String.join " " ("TRAIN" :: List.map String.fromInt [ level, x, y ])
 
