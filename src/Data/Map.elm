@@ -145,17 +145,14 @@ isMyUnit x y map =
 isProtectedByEnemyTower : Int -> Int -> Map -> Bool
 isProtectedByEnemyTower x y map =
     case get x y map of
-        Just (Cell.Active Me _) ->
-            False
-
-        Just (Cell.Inactive Me _) ->
-            False
-
-        _ ->
+        Just (Cell.Active Enemy _) ->
             isEnemyTower x (y - 1) map
                 || isEnemyTower (x - 1) y map
                 || isEnemyTower (x + 1) y map
                 || isEnemyTower x (y + 1) map
+
+        _ ->
+            False
 
 
 isEnemyTower : Int -> Int -> Map -> Bool
