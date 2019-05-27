@@ -6,6 +6,7 @@ import Data.CostMap as CostMap exposing (CostMap)
 import Data.Map as Map exposing (Map)
 import Data.Shared exposing (..)
 import Dict exposing (Dict)
+import Process.Cut as Cut
 import Process.Dijkstra as Dijkstra
 import Process.Frontier as Frontier
 import Process.Movement as Movement exposing (Movement)
@@ -96,6 +97,13 @@ strategy data state =
     in
     if List.isEmpty spear then
         let
+            -- Compute cuts scores
+            weakPoints =
+                Cut.weakEnemyPoints newMap
+
+            weakCuts =
+                List.filterMap (Cut.cutPoint ( enemyHqPos.x, enemyHqPos.y ) costMap newMap) weakPoints
+
             -- Compute tower scores
             towers =
                 Tower.sortedList state.minesSpots costMap criticalMap newMap
@@ -139,25 +147,34 @@ strategy data state =
                         ]
 
             -- Some log info
-            trainingString =
-                List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
-                    |> List.map (String.join " ")
+            -- trainingString =
+            --     List.map (\t -> List.map String.fromInt [ t.level, t.x, t.y ]) training
+            --         |> List.map (String.join " ")
+            --         |> String.join "\n"
+            --
+            -- frontierPosString =
+            --     Dict.keys frontier
+            --         |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
+            --         |> String.join "\n"
+            --
+            -- towersString =
+            --     List.map Tower.toString towers
+            --         |> String.join "\n"
+            weakPointsString =
+                List.map Cut.pointToString weakPoints
                     |> String.join "\n"
 
-            frontierPosString =
-                Dict.keys frontier
-                    |> List.map (\( x, y ) -> String.fromInt x ++ ", " ++ String.fromInt y)
-                    |> String.join "\n"
-
-            towersString =
-                List.map Tower.toString towers
+            weakCutsString =
+                List.map Cut.toString weakCuts
                     |> String.join "\n"
 
             log =
                 String.join "\n\n" <|
                     [ "Turn: " ++ String.fromInt data.turn
-                    , "Towers:\n" ++ towersString
+                    , "Weak points:\n" ++ weakPointsString
+                    , "Weak cuts:\n" ++ weakCutsString
 
+                    -- , "Towers:\n" ++ towersString
                     -- , "Training:\n" ++ trainingString
                     -- , "Frontier:\n" ++ frontierPosString
                     -- , "Cost map:\n" ++ CostMap.toString costMap

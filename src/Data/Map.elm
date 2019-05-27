@@ -5,6 +5,7 @@ module Data.Map exposing
     , getDistance1Cells
     , getDistance2Cells
     , hasActiveFriendlyNeighbour
+    , isActiveEnemy
     , isActiveMe
     , isEnemyTower
     , isMyUnit
@@ -126,6 +127,16 @@ isActiveMe : Int -> Int -> Map -> Bool
 isActiveMe x y map =
     case get x y map of
         Just (Cell.Active Me _) ->
+            True
+
+        _ ->
+            False
+
+
+isActiveEnemy : Int -> Int -> Map -> Bool
+isActiveEnemy x y map =
+    case get x y map of
+        Just (Cell.Active Enemy _) ->
             True
 
         _ ->
