@@ -1,9 +1,8 @@
 port module Main exposing (main)
 
-import Array exposing (Array)
 import Decode
 import Game
-import Json.Decode as Decode exposing (Decoder, Value)
+import Json.Decode exposing (Value)
 
 
 main : Program Value Game.State Value
@@ -36,12 +35,12 @@ Extract with a Json decoder.
 -}
 init : Value -> ( Game.State, Cmd msg )
 init data =
-    case Decode.decodeValue Decode.initData data of
-        Ok minesSpots ->
-            ( Game.initialState minesSpots, debug "Init Done!" )
+    case Json.Decode.decodeValue Decode.initData data of
+        Ok state ->
+            ( state, debug "Init Done!" )
 
         Err error ->
-            ( Game.initialState [], debug (Decode.errorToString error) )
+            ( Game.defaultState, debug (Json.Decode.errorToString error) )
 
 
 {-| Function called during game loop with game data of current turn.
@@ -49,14 +48,14 @@ Extract the data with a Json decoder.
 -}
 update : Value -> Game.State -> ( Game.State, Cmd msg )
 update data state =
-    case Decode.decodeValue Decode.gameData data of
+    case Json.Decode.decodeValue Decode.gameData data of
         Ok gameData ->
-            let
-                ( newState, theOrders, log ) =
-                    Game.strategy gameData state
-            in
-            -- ( newState, order theOrders )
-            ( newState, Cmd.batch [ debug log, order theOrders ] )
+            case Game.strategy gameData state of
+                ( newState, theOrders, Nothing ) ->
+                    ( newState, order theOrders )
+
+                ( newState, theOrders, Just log ) ->
+                    ( newState, Cmd.batch [ order theOrders, debug log ] )
 
         Err error ->
-            ( state, debug (Decode.errorToString error) )
+            ( state, debug (Json.Decode.errorToString error) )

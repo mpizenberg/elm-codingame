@@ -1,16 +1,11 @@
-// Get time
-time = new Date().getTime();
-
 // Retrieve initial data from input.
-initData = {};
-initData.numberMineSpots = parseInt(readline());
-initData.mines = [];
-for (let i = 0; i < initData.numberMineSpots; i++) {
-  const inputs = readline().split(" ");
-  const thisMine = {};
-  thisMine.x = parseInt(inputs[0]);
-  thisMine.y = parseInt(inputs[1]);
-  initData.mines.push(thisMine);
+const initData = {};
+var inputs = readline().split(" ");
+initData.width = parseInt(inputs[0]); // size of the grid
+initData.height = parseInt(inputs[1]); // top left corner is (x=0, y=0)
+initData.rows = [];
+for (let i = 0; i < initData.height; i++) {
+  initData.rows.push(readline()); // " " is floor, "#" is wall
 }
 
 // Init Elm app with initial data.
@@ -18,23 +13,16 @@ const app = this.Elm.Main.init({ flags: initData });
 
 // Setup subscription to elm outgoing port
 // used to transfer the string to print.
-app.ports.order.subscribe(answer => {
-  console.log(answer);
-  const newTime = new Date().getTime();
-  // console.error("Time taken: " + (newTime - time));
-});
+app.ports.order.subscribe(console.log);
 
 // We can also setup an error port for debug.
-app.ports.debug.subscribe(msg => console.error(msg));
+app.ports.debug.subscribe(console.error);
 
 // Global gameData to minimize GC.
-gameData = {};
+const gameData = {};
 
 // Game loop.
 (function gameLoop(turn) {
-  // Monitor time
-  time = new Date().getTime();
-
   // Read this turn game data.
   readLinesIntoGameData(turn);
 
@@ -52,42 +40,36 @@ function readLinesIntoGameData(turn) {
   // Turn
   gameData.turn = turn;
 
-  // Money.
-  gameData.gold = parseInt(readline());
-  gameData.income = parseInt(readline());
-  gameData.opponentGold = parseInt(readline());
-  gameData.opponentIncome = parseInt(readline());
+  // Score
+  var inputs = readline().split(" ");
+  gameData.myScore = parseInt(inputs[0]);
+  gameData.opponentScore = parseInt(inputs[1]);
 
-  // Terrain, game map.
-  gameData.terrain = [];
-  for (let i = 0; i < 12; i++) {
-    gameData.terrain.push(readline());
+  // All your pacs and enemy pacs in sight
+  gameData.pacs = [];
+  gameData.visiblePacCount = parseInt(readline());
+  for (let i = 0; i < gameData.visiblePacCount; i++) {
+    var inputs = readline().split(" ");
+    gameData.pacs.push({
+      pacId: parseInt(inputs[0]), // pac number (unique within a team)
+      mine: inputs[1] !== "0", // true if this pac is yours
+      x: parseInt(inputs[2]), // position in the grid
+      y: parseInt(inputs[3]), // position in the grid
+      typeId: inputs[4], // unused in wood leagues
+      speedTurnsLeft: parseInt(inputs[5]), // unused in wood leagues
+      abilityCooldown: parseInt(inputs[6]), // unused in wood leagues
+    });
   }
 
-  // Buildings.
-  gameData.buildingCount = parseInt(readline());
-  gameData.buildings = [];
-  for (let i = 0; i < gameData.buildingCount; i++) {
-    const inputs = readline().split(" ");
-    const thisBuilding = {};
-    thisBuilding.owner = parseInt(inputs[0]);
-    thisBuilding.buildingType = parseInt(inputs[1]);
-    thisBuilding.x = parseInt(inputs[2]);
-    thisBuilding.y = parseInt(inputs[3]);
-    gameData.buildings.push(thisBuilding);
-  }
-
-  // Units.
-  gameData.unitCount = parseInt(readline());
-  gameData.units = [];
-  for (let i = 0; i < gameData.unitCount; i++) {
-    const inputs = readline().split(" ");
-    const thisUnit = {};
-    thisUnit.owner = parseInt(inputs[0]);
-    thisUnit.unitId = parseInt(inputs[1]);
-    thisUnit.level = parseInt(inputs[2]);
-    thisUnit.x = parseInt(inputs[3]);
-    thisUnit.y = parseInt(inputs[4]);
-    gameData.units.push(thisUnit);
+  // All pellets in sight
+  gameData.pellets = [];
+  gameData.visiblePelletCount = parseInt(readline());
+  for (let i = 0; i < gameData.visiblePelletCount; i++) {
+    var inputs = readline().split(" ");
+    gameData.pellets.push({
+      x: parseInt(inputs[0]),
+      y: parseInt(inputs[1]),
+      value: parseInt(inputs[2]),
+    });
   }
 }

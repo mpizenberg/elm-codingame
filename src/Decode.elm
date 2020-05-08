@@ -1,121 +1,44 @@
 module Decode exposing (gameData, initData)
 
-import Array exposing (Array)
-import Data.Cell as Cell exposing (Cell)
-import Data.Map exposing (Map)
-import Data.Shared exposing (..)
 import Game
 import Json.Decode as Decode exposing (Decoder, Value)
 
 
-initData : Decoder (List Pos)
+initData : Decoder Game.State
 initData =
-    Decode.field "mines" (Decode.list pos)
-
-
-pos : Decoder Pos
-pos =
-    Decode.map2 Pos
-        (Decode.field "x" Decode.int)
-        (Decode.field "y" Decode.int)
+    Decode.map3 Game.State
+        (Decode.field "width" Decode.int)
+        (Decode.field "height" Decode.int)
+        (Decode.field "rows" (Decode.list Decode.string))
 
 
 gameData : Decoder Game.Data
 gameData =
-    Decode.map8 Game.Data
+    Decode.map7 Game.Data
         (Decode.field "turn" Decode.int)
-        (Decode.field "gold" Decode.int)
-        (Decode.field "income" Decode.int)
-        (Decode.field "opponentGold" Decode.int)
-        (Decode.field "opponentIncome" Decode.int)
-        (Decode.field "terrain" map)
-        (Decode.field "buildings" (Decode.list building))
-        (Decode.field "units" (Decode.list unit))
+        (Decode.field "myScore" Decode.int)
+        (Decode.field "opponentScore" Decode.int)
+        (Decode.field "visiblePacCount" Decode.int)
+        (Decode.field "pacs" (Decode.list pacmanDecoder))
+        (Decode.field "visiblePelletCount" Decode.int)
+        (Decode.field "pellets" (Decode.list pelletDecoder))
 
 
-map : Decoder Map
-map =
-    Decode.map Array.fromList mapLine
-        |> Decode.array
-
-
-mapLine : Decoder (List Cell)
-mapLine =
-    Decode.string
-        |> Decode.map String.toList
-        |> Decode.andThen (combine << List.map cellHelper)
-
-
-cellHelper : Char -> Decoder Cell
-cellHelper char =
-    case Cell.fromChar char of
-        Ok cell ->
-            Decode.succeed cell
-
-        Err msg ->
-            Decode.fail msg
-
-
-combine : List (Decoder a) -> Decoder (List a)
-combine =
-    List.foldr (Decode.map2 (::)) (Decode.succeed [])
-
-
-building : Decoder Building
-building =
-    Decode.map4 Building
-        (Decode.field "owner" owner)
-        (Decode.field "buildingType" buildingType)
+pacmanDecoder : Decoder Game.Pacman
+pacmanDecoder =
+    Decode.map7 Game.Pacman
+        (Decode.field "pacId" Decode.int)
+        (Decode.field "mine" Decode.bool)
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
+        (Decode.field "typeId" Decode.string)
+        (Decode.field "speedTurnsLeft" Decode.int)
+        (Decode.field "abilityCooldown" Decode.int)
 
 
-owner : Decoder Owner
-owner =
-    Decode.int
-        |> Decode.andThen ownerHelper
-
-
-ownerHelper : Int -> Decoder Owner
-ownerHelper n =
-    case n of
-        0 ->
-            Decode.succeed Me
-
-        1 ->
-            Decode.succeed Enemy
-
-        _ ->
-            Decode.fail "Incorrect owner id"
-
-
-buildingType : Decoder BuildingType
-buildingType =
-    Decode.int
-        |> Decode.andThen buildingTypeHelper
-
-
-buildingTypeHelper : Int -> Decoder BuildingType
-buildingTypeHelper n =
-    case n of
-        0 ->
-            Decode.succeed Hq
-
-        1 ->
-            Decode.succeed Mine
-
-        2 ->
-            Decode.succeed Tower
-
-        _ ->
-            Decode.fail "Incorrect buildingType id"
-
-
-unit : Decoder Unit
-unit =
-    Decode.map5 Unit
-        (Decode.field "owner" owner)
-        (Decode.field "unitId" Decode.int)
-        (Decode.field "level" Decode.int)
+pelletDecoder : Decoder Game.Pellet
+pelletDecoder =
+    Decode.map3 Game.Pellet
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
+        (Decode.field "value" Decode.int)
