@@ -18,8 +18,10 @@ type alias InitData =
 
 type alias State =
     { width : Int
+    , height : Int
     , graph : Graph Cell ()
     , targets : List Int
+    , myPacs : List PacmanData
     }
 
 
@@ -32,7 +34,7 @@ type Cell
 
 defaultState : State
 defaultState =
-    { width = 0, graph = Graph.empty, targets = [] }
+    { width = 0, height = 0, graph = Graph.empty, targets = [], myPacs = [] }
 
 
 init : InitData -> ( State, Maybe String )
@@ -55,7 +57,7 @@ init { width, height, rows } =
                 |> List.map (\e -> String.fromInt e.from ++ "-" ++ String.fromInt e.to)
                 |> String.join " "
     in
-    ( { width = width, graph = graph, targets = [] }
+    ( { width = width, height = height, graph = graph, targets = [], myPacs = [] }
     , Just (logNodes ++ "\n" ++ logEdges)
     )
 
@@ -234,17 +236,19 @@ strategy data state =
 
         myPacs =
             List.filter .mine data.pacs
+                |> List.sortBy .pacId
 
         pacStrat target pac =
-            pacStratValue pellets target (subToInd state.width pac.x pac.y)
+            pacStratValue pellets data.turn target state.width state.height state.myPacs pac
 
-        newTargets =
-            case ( data.turn, myPacs, state.targets ) of
-                ( 0, _, _ ) ->
-                    List.map (pacStrat 0) myPacs
+        ( newTargets, log ) =
+            List.unzip <|
+                case ( data.turn, myPacs, state.targets ) of
+                    ( 0, _, _ ) ->
+                        List.map (pacStrat 0) myPacs
 
-                ( _, _, _ ) ->
-                    List.map2 pacStrat state.targets myPacs
+                    ( _, _, _ ) ->
+                        List.map2 pacStrat state.targets myPacs
 
         toStringOrder { pacId } t =
             let
@@ -260,7 +264,10 @@ strategy data state =
             List.map2 toStringOrder myPacs newTargets
                 |> String.join " | "
     in
-    ( { state | targets = newTargets }, stringOrders, Nothing )
+    ( { state | targets = newTargets, myPacs = myPacs }
+    , stringOrders
+    , Just <| String.join "\n" (List.filterMap identity log)
+    )
 
 
 placePacmans : Int -> PacmanData -> Graph Cell () -> Graph Cell ()
@@ -281,9 +288,19 @@ placePellets width { x, y, value } graph =
 
 {-| Targets the pellet with most value
 -}
-pacStratValue : Dict Int (List Int) -> Int -> Int -> Int
-pacStratValue pellets target pos =
+pacStratValue : Dict Int (List Int) -> Int -> Int -> Int -> Int -> List PacmanData -> PacmanData -> ( Int, Maybe String )
+pacStratValue pellets turn target width height oldPacs pac =
     let
+        pos =
+            subToInd width pac.x pac.y
+
+        oldPac =
+            List.head (List.drop pac.pacId oldPacs)
+                |> Maybe.withDefault pac
+
+        oldPos =
+            subToInd width oldPac.x oldPac.y
+
         bigValue =
             Dict.keys pellets
                 |> List.sortBy (\v -> -v)
@@ -296,18 +313,43 @@ pacStratValue pellets target pos =
 
         targetInBig =
             List.member target bigTargets
+
+        nbBig =
+            List.length bigTargets
+
+        maxDrop =
+            nbBig - 1
+
+        seed =
+            Random.initialSeed (turn + pos)
+
+        ( randDrop, _ ) =
+            Random.step (Random.int 0 maxDrop) seed
+
+        ( randEverywhere, _ ) =
+            Random.step (Random.int 0 (width * height - 1)) seed
     in
-    if targetInBig then
-        target
+    if Dict.isEmpty pellets then
+        if oldPos == pos then
+            ( randEverywhere, Just "toto" )
+
+        else
+            ( target, Just "tata" )
+
+    else if targetInBig then
+        -- change target if we are blocked
+        if oldPos == pos then
+            if nbBig == 1 then
+                ( randEverywhere, Just "hoho" )
+
+            else
+                ( Maybe.withDefault 0 (List.head <| List.drop randDrop bigTargets), Just "1" )
+
+        else
+            ( target, Just "2" )
+
+    else if bigValue == 1 then
+        ( Maybe.withDefault 0 (List.head <| List.drop randDrop bigTargets), Just "3" )
 
     else
-        let
-            seed =
-                Random.initialSeed pos
-
-            ( n, _ ) =
-                Random.step (Random.int 0 <| List.length bigTargets - 1) seed
-        in
-        -- change target since it has been eaten already
-        Maybe.withDefault 0 (List.head <| List.drop n bigTargets)
-
+        ( Maybe.withDefault 0 (List.head <| List.drop (min maxDrop oldPac.pacId) bigTargets), Just (Debug.toString pellets) )
