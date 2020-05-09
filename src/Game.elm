@@ -1,6 +1,8 @@
 module Game exposing (Data, InitData, PacmanData, PelletData, State, defaultState, init, strategy)
 
+import Dict exposing (Dict)
 import Graph exposing (Graph)
+import Random
 
 
 
@@ -15,7 +17,10 @@ type alias InitData =
 
 
 type alias State =
-    Graph Cell ()
+    { width : Int
+    , graph : Graph Cell ()
+    , targets : List Int
+    }
 
 
 type Cell
@@ -27,7 +32,7 @@ type Cell
 
 defaultState : State
 defaultState =
-    Graph.empty
+    { width = 0, graph = Graph.empty, targets = [] }
 
 
 init : InitData -> ( State, Maybe String )
@@ -50,7 +55,9 @@ init { width, height, rows } =
                 |> List.map (\e -> String.fromInt e.from ++ "-" ++ String.fromInt e.to)
                 |> String.join " "
     in
-    ( graph, Just (logNodes ++ "\n" ++ logEdges) )
+    ( { width = width, graph = graph, targets = [] }
+    , Just (logNodes ++ "\n" ++ logEdges)
+    )
 
 
 type alias Node =
@@ -79,10 +86,10 @@ accumRows width row { y, topRow, allNodes, allEdges } =
         update x leftCell cell nodesAndEdges =
             let
                 leftId =
-                    subToId width (modBy width (x - 1)) y
+                    subToInd width (modBy width (x - 1)) y
 
                 id =
-                    subToId width x y
+                    subToInd width x y
             in
             case ( x, leftCell, cell ) of
                 -- Passage between left and right borders
@@ -136,10 +143,10 @@ buildTopEdges width y x hasEdge =
     if hasEdge then
         let
             topId =
-                subToId width x (y - 1)
+                subToInd width x (y - 1)
 
             id =
-                subToId width x y
+                subToInd width x y
         in
         [ Edge topId id (), Edge id topId () ]
 
@@ -162,9 +169,14 @@ wallFromChar char =
             True
 
 
-subToId : Int -> Int -> Int -> Int
-subToId width x y =
+subToInd : Int -> Int -> Int -> Int
+subToInd width x y =
     width * y + x
+
+
+indToSub : Int -> Int -> ( Int, Int )
+indToSub width id =
+    ( modBy width id, id // width )
 
 
 
@@ -202,4 +214,100 @@ type alias PelletData =
 
 strategy : Data -> State -> ( State, String, Maybe String )
 strategy data state =
-    ( state, "MOVE 0 15 10", Nothing )
+    let
+        graphWithPacmans =
+            List.foldl (placePacmans state.width) state.graph data.pacs
+
+        graphWithPellets =
+            List.foldl (placePellets state.width) graphWithPacmans data.pellets
+
+        incrementPellets p dict =
+            case Dict.get p.value dict of
+                Nothing ->
+                    Dict.insert p.value [ subToInd state.width p.x p.y ] dict
+
+                Just ids ->
+                    Dict.insert p.value (subToInd state.width p.x p.y :: ids) dict
+
+        pellets =
+            List.foldl incrementPellets Dict.empty data.pellets
+
+        myPacs =
+            List.filter .mine data.pacs
+
+        pacStrat target pac =
+            pacStratValue pellets target (subToInd state.width pac.x pac.y)
+
+        newTargets =
+            case ( data.turn, myPacs, state.targets ) of
+                ( 0, _, _ ) ->
+                    List.map (pacStrat 0) myPacs
+
+                ( _, _, _ ) ->
+                    List.map2 pacStrat state.targets myPacs
+
+        toStringOrder { pacId } t =
+            let
+                ( x, y ) =
+                    indToSub state.width t
+            in
+            [ pacId, x, y ]
+                |> List.map String.fromInt
+                |> (::) "MOVE"
+                |> String.join " "
+
+        stringOrders =
+            List.map2 toStringOrder myPacs newTargets
+                |> String.join " | "
+    in
+    ( { state | targets = newTargets }, stringOrders, Nothing )
+
+
+placePacmans : Int -> PacmanData -> Graph Cell () -> Graph Cell ()
+placePacmans width { pacId, mine, x, y } graph =
+    -- TODO
+    graph
+
+
+placePellets : Int -> PelletData -> Graph Cell () -> Graph Cell ()
+placePellets width { x, y, value } graph =
+    -- TODO
+    graph
+
+
+
+-- Individual Pacmans strategies
+
+
+{-| Targets the pellet with most value
+-}
+pacStratValue : Dict Int (List Int) -> Int -> Int -> Int
+pacStratValue pellets target pos =
+    let
+        bigValue =
+            Dict.keys pellets
+                |> List.sortBy (\v -> -v)
+                |> List.head
+                |> Maybe.withDefault 0
+
+        bigTargets =
+            Dict.get bigValue pellets
+                |> Maybe.withDefault []
+
+        targetInBig =
+            List.member target bigTargets
+    in
+    if targetInBig then
+        target
+
+    else
+        let
+            seed =
+                Random.initialSeed pos
+
+            ( n, _ ) =
+                Random.step (Random.int 0 <| List.length bigTargets - 1) seed
+        in
+        -- change target since it has been eaten already
+        Maybe.withDefault 0 (List.head <| List.drop n bigTargets)
+
