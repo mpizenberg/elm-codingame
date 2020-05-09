@@ -1,5 +1,6 @@
 module Game exposing (Data, InitData, PacmanData, PelletData, State, defaultState, init, strategy)
 
+import Data.Graph
 import Dict exposing (Dict)
 import Graph exposing (Graph)
 import Random
