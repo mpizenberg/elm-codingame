@@ -16,11 +16,11 @@ type alias ConvKernel a =
 
 conv : ConvKernel a -> Graph a -> Graph a
 conv kernel graph =
-    Graph.fold (nodeConv kernel graph) graph graph
+    Graph.mapContexts (nodeConv kernel graph) graph
 
 
-nodeConv : ConvKernel a -> Graph a -> Graph.NodeContext a () -> Graph a -> Graph a
-nodeConv kernel origGraph ctx accGraph =
+nodeConv : ConvKernel a -> Graph a -> Graph.NodeContext a () -> Graph.NodeContext a ()
+nodeConv kernel origGraph ctx =
     let
         origNeighborLabels =
             IntDict.foldl (\id _ list -> Graph.get id origGraph :: list) [] ctx.incoming
@@ -33,11 +33,8 @@ nodeConv kernel origGraph ctx accGraph =
             { id = ctx.node.id
             , label = newLabel
             }
-
-        newCtx =
-            { node = newNode
-            , incoming = ctx.incoming
-            , outgoing = ctx.outgoing
-            }
     in
-    Graph.insert newCtx accGraph
+    { node = newNode
+    , incoming = ctx.incoming
+    , outgoing = ctx.outgoing
+    }
