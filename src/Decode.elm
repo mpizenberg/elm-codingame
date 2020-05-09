@@ -1,12 +1,12 @@
 module Decode exposing (gameData, initData)
 
 import Game
-import Json.Decode as Decode exposing (Decoder, Value)
+import Json.Decode as Decode exposing (Decoder)
 
 
-initData : Decoder Game.State
+initData : Decoder Game.InitData
 initData =
-    Decode.map3 Game.State
+    Decode.map3 Game.InitData
         (Decode.field "width" Decode.int)
         (Decode.field "height" Decode.int)
         (Decode.field "rows" (Decode.list Decode.string))
@@ -24,9 +24,9 @@ gameData =
         (Decode.field "pellets" (Decode.list pelletDecoder))
 
 
-pacmanDecoder : Decoder Game.Pacman
+pacmanDecoder : Decoder Game.PacmanData
 pacmanDecoder =
-    Decode.map7 Game.Pacman
+    Decode.map7 Game.PacmanData
         (Decode.field "pacId" Decode.int)
         (Decode.field "mine" Decode.bool)
         (Decode.field "x" Decode.int)
@@ -36,9 +36,9 @@ pacmanDecoder =
         (Decode.field "abilityCooldown" Decode.int)
 
 
-pelletDecoder : Decoder Game.Pellet
+pelletDecoder : Decoder Game.PelletData
 pelletDecoder =
-    Decode.map3 Game.Pellet
+    Decode.map3 Game.PelletData
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
         (Decode.field "value" Decode.int)

@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import Decode
 import Game
+import Graph
 import Json.Decode exposing (Value)
 
 
@@ -36,8 +37,13 @@ Extract with a Json decoder.
 init : Value -> ( Game.State, Cmd msg )
 init data =
     case Json.Decode.decodeValue Decode.initData data of
-        Ok state ->
-            ( state, debug "Init Done!" )
+        Ok initData ->
+            case Game.init initData of
+                ( state, Nothing ) ->
+                    ( state, Cmd.none )
+
+                ( state, Just log ) ->
+                    ( state, debug log )
 
         Err error ->
             ( Game.defaultState, debug (Json.Decode.errorToString error) )
