@@ -1,12 +1,13 @@
 port module Main exposing (main)
 
-import Decode
+import Data.State exposing (State)
+import Data.Turn
 import Game
 import Graph
 import Json.Decode exposing (Value)
 
 
-main : Program Value Game.State Value
+main : Program Value State Value
 main =
     Platform.worker
         { init = init
@@ -34,9 +35,9 @@ port debug : String -> Cmd msg
 the Value contains initial game data.
 Extract with a Json decoder.
 -}
-init : Value -> ( Game.State, Cmd msg )
+init : Value -> ( State, Cmd msg )
 init data =
-    case Json.Decode.decodeValue Decode.initData data of
+    case Json.Decode.decodeValue Game.decodeInitData data of
         Ok initData ->
             case Game.init initData of
                 ( state, Nothing ) ->
@@ -46,17 +47,17 @@ init data =
                     ( state, debug log )
 
         Err error ->
-            ( Game.defaultState, debug (Json.Decode.errorToString error) )
+            ( Data.State.default, debug (Json.Decode.errorToString error) )
 
 
 {-| Function called during game loop with game data of current turn.
 Extract the data with a Json decoder.
 -}
-update : Value -> Game.State -> ( Game.State, Cmd msg )
+update : Value -> State -> ( State, Cmd msg )
 update data state =
-    case Json.Decode.decodeValue Decode.gameData data of
+    case Json.Decode.decodeValue Data.Turn.decode data of
         Ok gameData ->
-            case Game.strategy gameData state of
+            case Game.step gameData state of
                 ( newState, theOrders, Nothing ) ->
                     ( newState, order theOrders )
 

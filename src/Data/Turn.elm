@@ -1,20 +1,30 @@
-module Decode exposing (gameData, initData)
+module Data.Turn exposing (Data, Pellet, decode)
 
-import Game
+import Data.Pacman exposing (Pacman)
 import Json.Decode as Decode exposing (Decoder)
 
 
-initData : Decoder Game.InitData
-initData =
-    Decode.map3 Game.InitData
-        (Decode.field "width" Decode.int)
-        (Decode.field "height" Decode.int)
-        (Decode.field "rows" (Decode.list Decode.string))
+type alias Data =
+    { turn : Int
+    , myScore : Int
+    , opponentScore : Int
+    , visiblePacCount : Int
+    , pacs : List Pacman
+    , visiblePelletCount : Int
+    , pellets : List Pellet
+    }
 
 
-gameData : Decoder Game.Data
-gameData =
-    Decode.map7 Game.Data
+type alias Pellet =
+    { x : Int
+    , y : Int
+    , value : Int
+    }
+
+
+decode : Decoder Data
+decode =
+    Decode.map7 Data
         (Decode.field "turn" Decode.int)
         (Decode.field "myScore" Decode.int)
         (Decode.field "opponentScore" Decode.int)
@@ -24,9 +34,9 @@ gameData =
         (Decode.field "pellets" (Decode.list pelletDecoder))
 
 
-pacmanDecoder : Decoder Game.PacmanData
+pacmanDecoder : Decoder Pacman
 pacmanDecoder =
-    Decode.map7 Game.PacmanData
+    Decode.map7 Pacman
         (Decode.field "pacId" Decode.int)
         (Decode.field "mine" Decode.bool)
         (Decode.field "x" Decode.int)
@@ -36,9 +46,9 @@ pacmanDecoder =
         (Decode.field "abilityCooldown" Decode.int)
 
 
-pelletDecoder : Decoder Game.PelletData
+pelletDecoder : Decoder Pellet
 pelletDecoder =
-    Decode.map3 Game.PelletData
+    Decode.map3 Pellet
         (Decode.field "x" Decode.int)
         (Decode.field "y" Decode.int)
         (Decode.field "value" Decode.int)
