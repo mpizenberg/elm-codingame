@@ -1,4 +1,4 @@
-module Game exposing (Data, InitData, PacmanData, PelletData, State, defaultState, init, nodeIds, strategy)
+module Game exposing (Data, InitData, PacmanData, PelletData, State, defaultState, init, strategy)
 
 import Graph exposing (Graph)
 
@@ -20,7 +20,6 @@ type alias State =
 
 type Cell
     = Empty
-    | Wall
     | Pellet Int
     | Me Int
     | Opponent Int
@@ -31,16 +30,11 @@ defaultState =
     Graph.empty
 
 
-nodeIds : State -> List Int
-nodeIds state =
-    List.map .id (Graph.nodes state)
-
-
 init : InitData -> ( State, Maybe String )
 init { width, height, rows } =
     let
         { allNodes, allEdges } =
-            List.foldl (accumRows width) (RowAccum 0 (List.repeat width Wall) [] []) rows
+            List.foldl (accumRows width) (RowAccum 0 (List.repeat width True) [] []) rows
 
         graph =
             Graph.fromNodesAndEdges allNodes allEdges
@@ -73,14 +67,14 @@ type alias Edge =
 
 
 type alias RowAccum =
-    { y : Int, topRow : List Cell, allNodes : List Node, allEdges : List Edge }
+    { y : Int, topRow : List Bool, allNodes : List Node, allEdges : List Edge }
 
 
 accumRows : Int -> String -> RowAccum -> RowAccum
 accumRows width row { y, topRow, allNodes, allEdges } =
     let
         thisRow =
-            cellsFromString row
+            wallsFromString row
 
         update x leftCell cell nodesAndEdges =
             let
@@ -92,20 +86,20 @@ accumRows width row { y, topRow, allNodes, allEdges } =
             in
             case ( x, leftCell, cell ) of
                 -- Passage between left and right borders
-                ( 0, _, Empty ) ->
-                    { allNodes = Node id cell :: nodesAndEdges.allNodes
+                ( 0, _, False ) ->
+                    { allNodes = Node id Empty :: nodesAndEdges.allNodes
                     , allEdges = Edge leftId id () :: Edge id leftId () :: nodesAndEdges.allEdges
                     }
 
                 -- New node with and edge with the left node
-                ( _, Empty, Empty ) ->
-                    { allNodes = Node id cell :: nodesAndEdges.allNodes
+                ( _, False, False ) ->
+                    { allNodes = Node id Empty :: nodesAndEdges.allNodes
                     , allEdges = Edge leftId id () :: Edge id leftId () :: nodesAndEdges.allEdges
                     }
 
                 -- New node without edge
-                ( _, _, Empty ) ->
-                    { allNodes = Node id cell :: nodesAndEdges.allNodes
+                ( _, _, False ) ->
+                    { allNodes = Node id Empty :: nodesAndEdges.allNodes
                     , allEdges = nodesAndEdges.allEdges
                     }
 
@@ -117,10 +111,10 @@ accumRows width row { y, topRow, allNodes, allEdges } =
             ( x + 1, cell, update x leftCell cell nodesAndEdges )
 
         ( _, _, updated ) =
-            List.foldl accumNodesAndEdges ( 0, Wall, { allNodes = allNodes, allEdges = allEdges } ) thisRow
+            List.foldl accumNodesAndEdges ( 0, True, { allNodes = allNodes, allEdges = allEdges } ) thisRow
 
         topEdges =
-            List.map2 (\top this -> top == Empty && this == Empty) topRow thisRow
+            List.map2 (\top this -> not top && not this) topRow thisRow
                 |> List.indexedMap (buildTopEdges width y)
                 |> List.concat
     in
@@ -153,19 +147,19 @@ buildTopEdges width y x hasEdge =
         []
 
 
-cellsFromString : String -> List Cell
-cellsFromString str =
-    String.foldr (\char cells -> cellFromChar char :: cells) [] str
+wallsFromString : String -> List Bool
+wallsFromString str =
+    String.foldr (\char walls -> wallFromChar char :: walls) [] str
 
 
-cellFromChar : Char -> Cell
-cellFromChar char =
+wallFromChar : Char -> Bool
+wallFromChar char =
     case char of
         ' ' ->
-            Empty
+            False
 
         _ ->
-            Wall
+            True
 
 
 subToId : Int -> Int -> Int -> Int
