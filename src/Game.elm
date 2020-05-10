@@ -3,7 +3,7 @@ module Game exposing (InitData, decodeInitData, init, step)
 import Data.State as State exposing (State)
 import Data.Turn as Turn
 import Json.Decode as Decode exposing (Decoder)
-import Strategy.SuperPellets as Strategy
+import Strategy.Default as Strategy
 
 
 
