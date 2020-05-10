@@ -1,6 +1,8 @@
-module Strategy.SuperPellets exposing (individual)
+module Strategy.SuperPellets exposing (execute)
 
 import Data.Pacman exposing (Pacman)
+import Data.State exposing (State)
+import Data.Turn as Turn
 import Dict exposing (Dict)
 import Random
 
@@ -10,8 +12,67 @@ subToInd width x y =
     width * y + x
 
 
-individual : Dict Int (List Int) -> Int -> Int -> Int -> Int -> List Pacman -> Pacman -> ( Int, Maybe String )
-individual pellets turn target width height oldPacs pac =
+indToSub : Int -> Int -> ( Int, Int )
+indToSub width index =
+    ( modBy width index, index // width )
+
+
+execute : Turn.Data -> State -> ( State, List ( Int, Int, Int ), Maybe String )
+execute data state =
+    let
+        ( pellets, superPellets ) =
+            List.partition (\p -> p.value == 1) data.pellets
+
+        dictPellets =
+            if List.isEmpty pellets && List.isEmpty superPellets then
+                Dict.empty
+
+            else if List.isEmpty pellets then
+                Dict.fromList [ ( 10, List.map (\p -> subToInd state.width p.x p.y) superPellets ) ]
+
+            else if List.isEmpty superPellets then
+                Dict.fromList [ ( 1, List.map (\p -> subToInd state.width p.x p.y) pellets ) ]
+
+            else
+                Dict.fromList
+                    [ ( 1, List.map (\p -> subToInd state.width p.x p.y) pellets )
+                    , ( 10, List.map (\p -> subToInd state.width p.x p.y) superPellets )
+                    ]
+
+        ( myPacs, enemyVisiblePacs ) =
+            List.partition .mine data.pacs
+
+        individualStrat target pac =
+            if data.turn == 0 then
+                individual dictPellets data.turn state.width state.height state.myPacs target pac
+
+            else
+                individual dictPellets data.turn state.width state.height state.myPacs target pac
+
+        ( newTargets, listMaybeLogs ) =
+            List.map2 individualStrat state.targets myPacs
+                |> List.unzip
+
+        positions =
+            List.map (indToSub state.width) newTargets
+                |> List.indexedMap (\i ( x, y ) -> ( i, x, y ))
+
+        logs =
+            case List.filterMap identity listMaybeLogs of
+                [] ->
+                    Nothing
+
+                someLogs ->
+                    Just (String.join "\n" someLogs)
+
+        newState =
+            { state | targets = newTargets, myPacs = myPacs }
+    in
+    ( newState, positions, logs )
+
+
+individual : Dict Int (List Int) -> Int -> Int -> Int -> List Pacman -> Int -> Pacman -> ( Int, Maybe String )
+individual pellets turn width height oldPacs target pac =
     let
         pos =
             subToInd width pac.x pac.y

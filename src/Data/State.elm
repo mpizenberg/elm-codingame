@@ -31,7 +31,7 @@ init { width, height, rows } =
     { width = width
     , height = height
     , graph = Graph.fromRows Empty width rows
-    , targets = []
+    , targets = List.repeat 5 0
     , myPacs = []
     }
 

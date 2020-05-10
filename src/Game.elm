@@ -3,7 +3,7 @@ module Game exposing (InitData, decodeInitData, init, step)
 import Data.State as State exposing (State)
 import Data.Turn as Turn
 import Json.Decode as Decode exposing (Decoder)
-import Strategy.Default as Strategy
+import Strategy.SuperPellets as Strategy
 
 
 
@@ -39,17 +39,11 @@ init data =
 step : Turn.Data -> State -> ( State, String, Maybe String )
 step data state =
     let
-        ( pellets, superPellets ) =
-            List.partition (\p -> p.value == 1) data.pellets
-
-        ( myPacs, enemyVisiblePacs ) =
-            List.partition .mine data.pacs
-
-        ( orders, log ) =
-            Strategy.execute data state state
+        ( newState, targets, log ) =
+            Strategy.execute data state
     in
-    ( state
-    , String.join " | " (List.map stringOrder orders)
+    ( newState
+    , String.join " | " (List.map stringOrder targets)
     , log
     )
 
