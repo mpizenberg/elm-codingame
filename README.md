@@ -4,9 +4,15 @@ This template is designed for the puzzle ["Skynet Revolution"][skynet]
 but can easily be adapted to other CodinGame puzzles and contests.
 
 ```sh
+# Install dev dependencies
+npm install
+
 # Compile, minify (terser), beautify (prettier), concatenate, copy to clipboard
-make all
+npx node build.js
 ```
+
+> Note: copy to clipboard is not supported on Linux system using Wayland.
+> In such cases just copy yourself the content of `build/code.js`
 
 [skynet]: https://www.codingame.com/training/medium/skynet-revolution-episode-1
 

@@ -1,0 +1,29 @@
+{
+  "name": "elm-codingame",
+  "version": "1.0.0",
+  "description": "Use Elm for CodinGame",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mpizenberg/elm-codingame.git"
+  },
+  "keywords": [
+    "elm",
+    "codingame"
+  ],
+  "author": "Matthieu Pizenberg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mpizenberg/elm-codingame/issues"
+  },
+  "homepage": "https://github.com/mpizenberg/elm-codingame#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "clipboardy": "^2.3.0",
+    "cross-spawn": "^7.0.3",
+    "prettier": "^2.2.1",
+    "terser": "^5.7.0"
+  }
+}
