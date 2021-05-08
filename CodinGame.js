@@ -24,10 +24,10 @@ const app = this.Elm.Main.init({ flags: initData });
 
 // Setup subscription to elm outgoing port
 // used to transfer the string to print.
-app.ports.command.subscribe((cmd) => console.log(cmd));
+app.ports.stdout.subscribe((cmd) => console.log(cmd));
 
 // We can also setup an error port for debug.
-app.ports.debug.subscribe((msg) => console.error(msg));
+app.ports.stderr.subscribe((msg) => console.error(msg));
 
 // Start the game loop.
 gameLoop();
@@ -35,7 +35,7 @@ gameLoop();
 // Game loop.
 function gameLoop() {
   // Send game turn data to elm for processing.
-  app.ports.incoming.send(readLinesIntoTurnData());
+  app.ports.stdin.send(readLinesIntoTurnData());
 
   // Give up priority on the event loop to enable
   // subscription to elm outgoing port to trigger.

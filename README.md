@@ -33,15 +33,15 @@ initData = {};
 const app = this.Elm.Main.init({ flags: initData });
 
 // Transfer Elm command to STDOUT.
-app.ports.command.subscribe(answer => console.log(answer));
+app.ports.stdout.subscribe(answer => console.log(answer));
 
 // Transfer Elm debug to STDERR.
-app.ports.debug.subscribe(msg => console.error(msg));
+app.ports.stderr.subscribe(msg => console.error(msg));
 
 // Game loop.
 (function gameLoop() {
   // Send turn data to Elm for processing.
-  app.ports.incoming.send(readLinesIntoTurnData());
+  app.ports.stdin.send(readLinesIntoTurnData());
 
   // Give up priority on the event loop to enable
   // subscription to elm outgoing port to trigger.
@@ -61,17 +61,17 @@ It is a normal [`Platform.worker`][worker] program with 3 ports set up.
 
 ```elm
 -- Retrieve the updated game data every turn.
-port incoming : (Value -> msg) -> Sub msg
+port stdin : (Value -> msg) -> Sub msg
 
 -- Port to give the new command for this turn.
-port command : String -> Cmd msg
+port stdout : String -> Cmd msg
 
 -- Port to help debugging, will print using console.error().
-port debug : String -> Cmd msg
+port stderr : String -> Cmd msg
 ```
 
 In the update function, after computing our strategy,
-we generate a string and send it to the `command` port
+we generate a string and send it to the `stdout` port
 so that CodinGame executes our command.
 
 [worker]: https://package.elm-lang.org/packages/elm/core/latest/Platform#worker

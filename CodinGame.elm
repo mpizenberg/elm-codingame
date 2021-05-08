@@ -10,9 +10,9 @@ type alias Runtime state =
 
 
 type alias Ports =
-    { incoming : Sub Value
-    , command : String -> Cmd Value
-    , debug : String -> Cmd Value
+    { stdin : Sub Value
+    , stdout : String -> Cmd Value
+    , stderr : String -> Cmd Value
     }
 
 
@@ -21,33 +21,33 @@ worker ports { init, turn } =
     Platform.worker
         { init = setup ports init
         , update = update ports turn
-        , subscriptions = \_ -> ports.incoming
+        , subscriptions = \_ -> ports.stdin
         }
 
 
 setup : Ports -> (Value -> ( state, Maybe String )) -> Value -> ( state, Cmd Value )
 setup ports init flags =
     let
-        ( state, maybeDebug ) =
+        ( state, maybeStderr ) =
             init flags
     in
-    case maybeDebug of
+    case maybeStderr of
         Nothing ->
             ( state, Cmd.none )
 
-        Just debug ->
-            ( state, ports.debug debug )
+        Just stderr ->
+            ( state, ports.stderr stderr )
 
 
 update : Ports -> (Value -> state -> ( state, String, Maybe String )) -> Value -> state -> ( state, Cmd Value )
 update ports turn msg state =
     let
-        ( newState, command, maybeDebug ) =
+        ( newState, stdout, maybeStderr ) =
             turn msg state
     in
-    case maybeDebug of
+    case maybeStderr of
         Nothing ->
-            ( newState, ports.command command )
+            ( newState, ports.stdout stdout )
 
-        Just debug ->
-            ( newState, Cmd.batch [ ports.command command, ports.debug debug ] )
+        Just stderr ->
+            ( newState, Cmd.batch [ ports.stdout stdout, ports.stderr stderr ] )

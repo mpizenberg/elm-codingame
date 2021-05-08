@@ -6,25 +6,25 @@ import Json.Decode as Decode exposing (Decoder, Value)
 
 {-| Port bringing the updated game data every turn.
 -}
-port incoming : (Value -> msg) -> Sub msg
+port stdin : (Value -> msg) -> Sub msg
 
 
 {-| Port to give the new commands for this turn.
 -}
-port command : String -> Cmd msg
+port stdout : String -> Cmd msg
 
 
 {-| Port to help debugging, will print using console.error().
 -}
-port debug : String -> Cmd msg
+port stderr : String -> Cmd msg
 
 
 main : Program Value GameState Value
 main =
     CodinGame.worker
-        { incoming = incoming identity
-        , command = command
-        , debug = debug
+        { stdin = stdin identity
+        , stdout = stdout
+        , stderr = stderr
         }
         { init = init
         , turn = turn
