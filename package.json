@@ -24,6 +24,6 @@
     "clipboardy": "^2.3.0",
     "cross-spawn": "^7.0.3",
     "prettier": "^2.2.1",
-    "terser": "^5.7.0"
+    "terser": "^5.14.2"
   }
 }
